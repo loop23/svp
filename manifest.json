@@ -1,0 +1,18 @@
+{
+  "name": "SyncVideo",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "Video Player with synced filesystem",
+  "icons": {
+    "16": "img/icon-16.png",
+    "24": "img/icon-24.png",
+    "128": "img/icon-128.png"
+  },
+  "app": {
+    "background": {
+      "scripts": ["js/background.js"]
+    }
+  },
+  "permissions": ["syncFileSystem",
+		  "fullscreen"]
+}
