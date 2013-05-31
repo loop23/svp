@@ -49,7 +49,7 @@ function info(msg) {
 }
 
 function error(msg) {
-  console.log('ERROR: ', arguments);
+//  console.log('ERROR: ', arguments);
   var message = '';
   for (var i = 0; i < arguments.length; i++) {
     var description = '';
@@ -84,6 +84,6 @@ function error(msg) {
   var e = document.getElementById('error');
   e.innerText = 'ERROR:' + message;
   e.classList.remove('hide');
+  console.log('ERROR: ' + message);
   window.setTimeout(function() { e.innerHTML = ''; }, 5000);
 }
-

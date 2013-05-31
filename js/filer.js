@@ -1,7 +1,8 @@
-Filer = function(filesystem, container, video, isSyncable) {
+Filer = function(filesystem, container, video) {
   this.filesystem = filesystem;
   this.video = video;
-  this.isSyncable = isSyncable;
+
+  chrome.syncFileSystem.getUsageAndQuota(filesystem, function (info) { console.log("Info: %o", info); });
 
   // Directory path => ul node mapping.
   var nodes = {};
@@ -53,6 +54,7 @@ Filer = function(filesystem, container, video, isSyncable) {
       log('Service state updated: ' + detail.state + ': '
           + detail.description);
     }.bind(this));
+
 };
 
 Filer.prototype.getNext = function() {
@@ -73,6 +75,7 @@ Filer.prototype.getNext = function() {
 
 Filer.prototype.list = function(dir) {
   // TODO(kinuko): This should be queued up.
+  console.log("Invocata list per dir %o", dir);
   var node = this.getListNode(dir.fullPath);
   if (node.fetching)
     return;
@@ -125,7 +128,7 @@ Filer.prototype.addEntry = function(parentNode, entry, file) {
   node.appendChild(a);
   li.appendChild(node);
 
-  if (this.isSyncable && chrome.syncFileSystem.getFileStatus) {
+  if (chrome.syncFileSystem.getFileStatus) {
     chrome.syncFileSystem.getFileStatus(entry, function(status) {
       node.classList.add(status);
     });
@@ -137,7 +140,7 @@ Filer.prototype.addEntry = function(parentNode, entry, file) {
   }
 
   // Show size in a separate div '<div>[size] KB</div>'
-  var sizeDiv = createElement('div', { class:'size' });
+  var sizeDiv = createElement('div', { 'class':'size' });
   sizeDiv.appendChild(document.createTextNode(this.formatSize(file.size)));
   node.appendChild(sizeDiv);
 
@@ -150,7 +153,7 @@ Filer.prototype.addEntry = function(parentNode, entry, file) {
 };
 
 Filer.prototype.showUsage = function() {
-  if (this.isSyncable && chrome && chrome.syncFileSystem) {
+  if (chrome.syncFileSystem) {
     chrome.syncFileSystem.getUsageAndQuota(
       this.filesystem,
       function(info) {

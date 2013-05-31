@@ -1,23 +1,15 @@
-var supportsSyncFileSystem = chrome && chrome.syncFileSystem;
-
 document.addEventListener(
   'DOMContentLoaded',
   function() {
-    $('#fs-syncable').addEventListener('click', openSyncableFileSystem);
-    $('#fs-temporary').addEventListener('click', openTemporaryFileSystem);
-
-    if (supportsSyncFileSystem)
-      openSyncableFileSystem();
-    else
-      openTemporaryFileSystem();
+    openSyncableFileSystem();
   }
 );
 
-function onFileSystemOpened(fs, isSyncable) {
+function onFileSystemOpened(fs) {
   log('Got Syncable FileSystem.');
   console.log('Got FileSystem:' + fs.name);
   var video = new Video(fs, 'video');
-  var filer = new Filer(fs, 'filer', video, isSyncable);
+  var filer = new Filer(fs, 'filer', video);
   window.filer = filer;
   video.filer = filer;
   // console.log("filer ha getNext? %o", filer.getNext());
@@ -31,14 +23,6 @@ function onFileSystemOpened(fs, isSyncable) {
   }, 500);
 }
 
-function openTemporaryFileSystem() {
-  $('#fs-temporary').classList.add('selected');
-  $('#fs-syncable').classList.remove('selected');
-  webkitRequestFileSystem(TEMPORARY, 1024,
-                          onFileSystemOpened,
-                          error.bind(null, 'requestFileSystem'));
-}
-
 function openSyncableFileSystem() {
   if (!chrome || !chrome.syncFileSystem ||
       !chrome.syncFileSystem.requestFileSystem) {
@@ -46,7 +30,6 @@ function openSyncableFileSystem() {
     return;
   }
   $('#fs-syncable').classList.add('selected');
-  $('#fs-temporary').classList.remove('selected');
   if (chrome.syncFileSystem.setConflictResolutionPolicy) {
     chrome.syncFileSystem.setConflictResolutionPolicy('last_write_win');
   }
@@ -57,7 +40,7 @@ function openSyncableFileSystem() {
       $('#fs-syncable').classList.remove('selected');
       return;
     }
-    onFileSystemOpened(fs, true);
+    onFileSystemOpened(fs);
   });
   console.log('Esco dal metodo...');
 }
