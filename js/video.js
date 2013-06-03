@@ -18,9 +18,7 @@ Video.prototype.load = function(entry) {
   entry.file(function (file) { console.log("Chi e' costui? %o", file); });
   this.setCurrentPath(entry.fullPath);
   var vd = $('video');
-  vd.addEventListener('progress', function(v) {
-    console.log("progressing %o", v);
-  });
+  // This event is supposed to work from 28.x and some. For the time being better off leaving it commented!
   vd.addEventListener('ended', function(v) {
     console.log("ended %o", v);
     filer.getNext();
@@ -31,9 +29,9 @@ Video.prototype.load = function(entry) {
 };
 
 Video.prototype.loadNext = function() {
-  console.log("Chi e' il mio filer? %o", this.filer);
+  // console.log("Chi e' il mio filer? %o", this.filer);
   var nf = this.filer.getNext();
-  console.log("Next is: %o", nf);
+  // console.log("Next is: %o", nf);
   this.open(nf);
 };
 

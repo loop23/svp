@@ -8,8 +8,8 @@ document.addEventListener(
 function onFileSystemOpened(fs) {
   log('Got Syncable FileSystem.');
   console.log('Got FileSystem:' + fs.name);
-  var video = new Video(fs, 'video');
-  var filer = new Filer(fs, 'filer', video);
+  var video = new Video(fs, '#video');
+  var filer = new Filer(fs, '#filer', video);
   window.filer = filer;
   video.filer = filer;
   // console.log("filer ha getNext? %o", filer.getNext());
@@ -26,18 +26,16 @@ function onFileSystemOpened(fs) {
 function openSyncableFileSystem() {
   if (!chrome || !chrome.syncFileSystem ||
       !chrome.syncFileSystem.requestFileSystem) {
-    error('Syncable FileSystem is not supported in your environment.');
+    error('Syncable FileSystem is not supported in your environment; Maybe too old chrome version (needs at least 28) or too new if APIs changed');
     return;
   }
-  $('#fs-syncable').classList.add('selected');
   if (chrome.syncFileSystem.setConflictResolutionPolicy) {
     chrome.syncFileSystem.setConflictResolutionPolicy('last_write_win');
   }
-  log('Obtaining syncable FileSystem...');
+  log('Obtaining syncable FileSystem; This sometimes takes a while...');
   chrome.syncFileSystem.requestFileSystem(function (fs) {
     if (chrome.runtime.lastError) {
       error('requestFileSystem: ' + chrome.runtime.lastError.message);
-      $('#fs-syncable').classList.remove('selected');
       return;
     }
     onFileSystemOpened(fs);

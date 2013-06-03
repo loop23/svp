@@ -1,11 +1,27 @@
-Filer = function(filesystem, container, video) {
+/* This object evolved; it used to be the file list shown on the left hand
+ * of the screen, is now more of a multi-playlist manager.
+ */
+Filer = function(filesystem, container_name, video) {
+
   this.filesystem = filesystem;
   this.video = video;
 
-  chrome.syncFileSystem.getUsageAndQuota(filesystem, function (info) { console.log("Info: %o", info); });
+  this.schedule = new playList();
+  this.schedule.push('spot', 'video', 'video', 'altri', 'video', 'video');
+
+  chrome.syncFileSystem.getUsageAndQuota(filesystem, function (info) {
+    console.log("Info: %o", info);
+  });
+
+  console.log("filer ha video? %o", video);
 
   // Directory path => ul node mapping.
   var nodes = {};
+
+  // Le mie playlist separate
+  var videos = new playList();
+  var spot = new playList();
+  var altri = new playList();
   this.getListNode = function(path) {
     console.log("getListNode for %o", path);
     return nodes[path];
@@ -15,8 +31,11 @@ Filer = function(filesystem, container, video) {
     nodes[path] = node;
   };
   this.allNodes = function() { return nodes; };
+  this.getVideos = function() { return videos; };
+  this.getSpot = function() { return spot; };
+  this.getAltri = function() { return altri; };
 
-  var container = document.getElementById(container);
+  var container = $(container_name);
   container.innerHTML = '';
 
   var tools = createElement('div', {'class': 'filer-tools'});
@@ -39,38 +58,51 @@ Filer = function(filesystem, container, video) {
   };
   $('#filer-reload').addEventListener('click', this.reload.bind(this));
   this.reload();
+  // Starts playing
+  this.video.loadNext();
 
-  chrome.syncFileSystem.onFileStatusChanged.addListener(
-    function(detail) {
-      if (detail.direction == 'remote_to_local') {
-        info('File ' + detail.fileEntry.fullPath +
-             ' is ' + detail.action + ' by background sync.');
-      }
-      this.reload();
-    }.bind(this));
+  if (!chrome.syncFileSystem.onFileStatusChanged) {
+    error("onFileSystemStatusChanged unsupported. Maybe too new or too old browser!");
+  } else {
+    chrome.syncFileSystem.onFileStatusChanged.addListener(
+      function(detail) {
+	console.log("Callback per onFileStatusChanged, detail: %o", detail);
+	if (detail.direction == 'remote_to_local') {
+	  info('File ' + detail.fileEntry.fullPath +
+               ' is ' + detail.action + ' by background sync.');
+	}
+	this.reload();
+      }.bind(this));
+  };
 
-  chrome.syncFileSystem.onServiceStatusChanged.addListener(
-    function(detail) {
-      log('Service state updated: ' + detail.state + ': '
+  if (!chrome.syncFileSystem.onServiceStatusChanged) {
+    error("onServiceStatusChanged unsupported. Maybe too new or too old browser!");
+  } else {
+    chrome.syncFileSystem.onServiceStatusChanged.addListener(
+      function(detail) {
+	log('Service state updated: ' + detail.state + ': '
           + detail.description);
-    }.bind(this));
-
+	console.log("onServiceStatusChanged with detail: %o", detail);
+      }.bind(this));
+  };
 };
 
 Filer.prototype.getNext = function() {
-  console.log("getNext invocata!");
-  try {
-    // Select a random one!
-    var nodes = this.allNodes()['/'].children;
-    var keys = Object.keys(nodes);
-    console.log("keys: %o", keys);
-    var ci = keys[Math.floor(keys.length * Math.random())];
-    console.log("ci: %o", ci);
-    return nodes[ci];
-  } catch (x) {
-    console.log("getNext fallita! sob!");
-    return null;
-  }
+  var tmp = this.schedule.circulate();
+  console.log("getNext invocata!, lavoro su %o", tmp);
+  switch (tmp) {
+    case 'video':
+      return this.getVideos().circulate();
+      break;
+    case 'spot':
+      return this.getSpot().circulate();
+      break;
+    case 'altri':
+      return this.getAltri().circulate();
+      break;
+    default:
+      return this.getVideos().circulate();
+   }
 };
 
 Filer.prototype.list = function(dir) {
@@ -87,6 +119,7 @@ Filer.prototype.list = function(dir) {
 Filer.prototype.didReadEntries = function(dir, reader, entries) {
   var node = this.getListNode(dir.fullPath);
   if (!entries.length) {
+    console.log("entries vuoto!");
     node.fetching = false;
     return;
   }
@@ -94,11 +127,21 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
   hide('#filer-empty-label');
 
   for (var i = 0; i < entries.length; ++i) {
-    if (entries[i].isFile) {
+    var tf = entries[i];
+    console.log("Processing entry: %o", tf);
+    if (tf.isFile) {
       // Get File object so that we can show the file size.
-      entries[i].file(this.addEntry.bind(this, node, entries[i]),
-                      error.bind(null, "Entry.file:", entries[i]));
+      tf.file(this.addEntry.bind(this, node, tf),
+                      error.bind(null, "Entry.file:", tf));
+      if (tf.name.match(/^video_/)) {
+	this.getVideos().unshift(tf.name);
+      } else if (tf.name.match(/^spot_/)) {
+	this.getSpot().unshift(tf.name);
+      } else if (tf.name.match(/^altri_/)) {
+	this.getAltri().unshift(tf.name);
+      }
     } else {
+      console.log("Non succede mai! o si?");
       this.addEntry(node, entries[i]);
     }
   }

@@ -23,7 +23,7 @@ function validFileName(path) {
 }
 
 function log(msg) {
-  document.getElementById('log').innerHTML = msg;
+  $('#log').innerHTML = msg;
   console.log(msg, arguments);
 }
 
@@ -81,7 +81,7 @@ function error(msg) {
       message += arguments[i] + ' ';
     }
   }
-  var e = document.getElementById('error');
+  var e = $('#error');
   e.innerText = 'ERROR:' + message;
   e.classList.remove('hide');
   console.log('ERROR: ' + message);

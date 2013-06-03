@@ -36,13 +36,6 @@ body {
   border: solid 1px #ccc;
 }
 
-#fs-selector {
-  margin-top: -1px;
-  padding-bottom: 3px;
-  margin-bottom: 3px;
-  border-bottom: solid 1px #ccc;
-}
-
 .fs-button {
   font-size: 13px;
   background: #acf;
@@ -207,5 +200,4 @@ body {
   color: #666;
   font-weight: bold;
   font-size: 13px;
-  border: 1px solid red;
 }
