@@ -2,7 +2,8 @@ function playList() {
 
   this.circulate = function() {
     var tmp = this.shift();
-    this.push(tmp);
+    if (tmp)
+      this.push(tmp);
     return tmp;
   };
 }
