@@ -7,6 +7,7 @@ Video = function(filesystem, container, filer) {
 };
 
 Video.prototype.open = function(path) {
+  console.log("chiamata Video.open! - path %o", path);
   this.filesystem.root.getFile(
       path, {},
       this.load.bind(this),
@@ -29,9 +30,9 @@ Video.prototype.load = function(entry) {
 };
 
 Video.prototype.loadNext = function() {
-  // console.log("Chi e' il mio filer? %o", this.filer);
+  console.log("Video.loadNext, filer? %o", this.filer);
   var nf = this.filer.getNext();
-  // console.log("Next is: %o", nf);
+  console.log("Next is: %o", nf);
   this.open(nf);
 };
 

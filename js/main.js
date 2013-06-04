@@ -9,9 +9,13 @@ function onFileSystemOpened(fs) {
   log('Got Syncable FileSystem.');
   console.log('Got FileSystem:' + fs.name);
   var video = new Video(fs, '#video');
+  console.log('Got video!');
   var filer = new Filer(fs, '#filer', video);
+  console.log('Got filer!');
   window.filer = filer;
   video.filer = filer;
+  // Ora dovrebbe essere ok chiamare loadNext.. ma invece?
+  setTimeout(function() { video.loadNext(); }, 1000);
   // console.log("filer ha getNext? %o", filer.getNext());
   setInterval(function(){
     if (video.hasEnded()) {

@@ -18,16 +18,14 @@ Filer = function(filesystem, container_name, video) {
   // Directory path => ul node mapping.
   var nodes = {};
 
-  // Le mie playlist separate
-  var videos = new playList();
-  var spot = new playList();
-  var altri = new playList();
+  // Le mie playlist separate - e' inutile inizializzarle qui, lo fara' reload
+  // this.resetPlaylists();
   this.getListNode = function(path) {
-    console.log("getListNode for %o", path);
+    // console.log("getListNode for %o", path);
     return nodes[path];
   };
   this.setListNode = function(path, node) {
-    console.log("Setting node %o at path %o", node, path);
+    // console.log("Setting node %o at path %o", node, path);
     nodes[path] = node;
   };
   this.allNodes = function() { return nodes; };
@@ -54,12 +52,11 @@ Filer = function(filesystem, container_name, video) {
   this.reload = function() {
     rootNode.innerHTML = '';
     this.showUsage();
+    this.resetPlaylists();
     this.list(filesystem.root);
   };
   $('#filer-reload').addEventListener('click', this.reload.bind(this));
   this.reload();
-  // Starts playing
-  this.video.loadNext();
 
   if (!chrome.syncFileSystem.onFileStatusChanged) {
     error("onFileSystemStatusChanged unsupported. Maybe too new or too old browser!");
@@ -85,23 +82,33 @@ Filer = function(filesystem, container_name, video) {
 	console.log("onServiceStatusChanged with detail: %o", detail);
       }.bind(this));
   };
+  console.log("filer initialized");
+};
+
+Filer.prototype.resetPlaylists = function() {
+  this.videos = new playList();
+  this.spot = new playList();
+  this.altri = new playList();
 };
 
 Filer.prototype.getNext = function() {
   var tmp = this.schedule.circulate();
   console.log("getNext invocata!, lavoro su %o", tmp);
+  console.log("ma cazzo! %o, %o, %o", this.videos, this.altri, this.spot);
   switch (tmp) {
     case 'video':
-      return this.getVideos().circulate();
+      console.log("Qui non quadra! miei videos: %o", this.videos);
+      return this.videos.circulate();
       break;
     case 'spot':
-      return this.getSpot().circulate();
+      return this.spot.circulate();
       break;
     case 'altri':
-      return this.getAltri().circulate();
+      console.log("Qui non quadra! miei altri?: %o", this.altri);
+      return this.altri.circulate();
       break;
     default:
-      return this.getVideos().circulate();
+      return this.videos.circulate();
    }
 };
 
@@ -119,7 +126,7 @@ Filer.prototype.list = function(dir) {
 Filer.prototype.didReadEntries = function(dir, reader, entries) {
   var node = this.getListNode(dir.fullPath);
   if (!entries.length) {
-    console.log("entries vuoto!");
+    console.log("entries vuoto - ovvero ha finito!");
     node.fetching = false;
     return;
   }
@@ -134,30 +141,20 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
       tf.file(this.addEntry.bind(this, node, tf),
                       error.bind(null, "Entry.file:", tf));
       if (tf.name.match(/^video_/)) {
-	this.getVideos().unshift(tf.name);
+	this.videos.unshift(tf.name);
       } else if (tf.name.match(/^spot_/)) {
-	this.getSpot().unshift(tf.name);
+	console.log("Aggiungo %o a spot, che al momento contiene: %o elementi", tf, this.spot.length);
+	this.spot.unshift(tf.name);
       } else if (tf.name.match(/^altri_/)) {
-	this.getAltri().unshift(tf.name);
+	this.altri.unshift(tf.name);
       }
     } else {
-      console.log("Non succede mai! o si?");
       this.addEntry(node, entries[i]);
     }
   }
 
   // Continue reading.
   reader.readEntries(this.didReadEntries.bind(this, dir, reader), error);
-};
-
-Filer.prototype.rename = function(oldName, newName) {
-  this.filesystem.root.getFile(
-    oldName, {create:false},
-    function(entry) {
-      entry.moveTo(this.filesystem.root, newName,
-                   log.bind(null, 'Renamed: ' + oldName + ' -> ' + newName),
-                   error);
-    }.bind(this), error.bind(null, 'getFile:' + oldName));
 };
 
 Filer.prototype.addEntry = function(parentNode, entry, file) {
