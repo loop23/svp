@@ -15,16 +15,15 @@ function onFileSystemOpened(fs) {
   window.filer = filer;
   video.filer = filer;
   // Ora dovrebbe essere ok chiamare loadNext.. ma invece?
+  // Per ora mi accontento di questo timeout
   setTimeout(function() { video.loadNext(); }, 1000);
-  // console.log("filer ha getNext? %o", filer.getNext());
+  // Rimetto questo polling, ended e' ancora inaffidabile!
   setInterval(function(){
     if (video.hasEnded()) {
-      console.log("Ha finito!");
+      console.log("Ha finito playing!");
       video.loadNext();
-    } else {
-      console.log("Non ha finito");
     }
-  }, 500);
+  }, 1000);
 }
 
 function openSyncableFileSystem() {

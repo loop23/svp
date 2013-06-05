@@ -1,5 +1,7 @@
 /* This object evolved; it used to be the file list shown on the left hand
  * of the screen, is now more of a multi-playlist manager.
+ * It gets initialized with a filesystem, parent container name and video
+ * object
  */
 Filer = function(filesystem, container_name, video) {
 
@@ -67,8 +69,13 @@ Filer = function(filesystem, container_name, video) {
 	if (detail.direction == 'remote_to_local') {
 	  info('File ' + detail.fileEntry.fullPath +
                ' is ' + detail.action + ' by background sync.');
+	  if (detail.action == "added") {
+	    this.addFile(detail.fileEntry);
+	  } else {
+	    this.reload();
+	  }
 	}
-	this.reload();
+	// this.reload();
       }.bind(this));
   };
 
@@ -94,19 +101,14 @@ Filer.prototype.resetPlaylists = function() {
 Filer.prototype.getNext = function() {
   var tmp = this.schedule.circulate();
   console.log("getNext invocata!, lavoro su %o", tmp);
-  console.log("ma cazzo! %o, %o, %o", this.videos, this.altri, this.spot);
+  // console.log("ma cazzo! %o, %o, %o", this.videos, this.altri, this.spot);
   switch (tmp) {
     case 'video':
-      console.log("Qui non quadra! miei videos: %o", this.videos);
       return this.videos.circulate();
-      break;
     case 'spot':
       return this.spot.circulate();
-      break;
     case 'altri':
-      console.log("Qui non quadra! miei altri?: %o", this.altri);
       return this.altri.circulate();
-      break;
     default:
       return this.videos.circulate();
    }
@@ -134,62 +136,24 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
   hide('#filer-empty-label');
 
   for (var i = 0; i < entries.length; ++i) {
-    var tf = entries[i];
-    console.log("Processing entry: %o", tf);
-    if (tf.isFile) {
-      // Get File object so that we can show the file size.
-      tf.file(this.addEntry.bind(this, node, tf),
-                      error.bind(null, "Entry.file:", tf));
-      if (tf.name.match(/^video_/)) {
-	this.videos.unshift(tf.name);
-      } else if (tf.name.match(/^spot_/)) {
-	console.log("Aggiungo %o a spot, che al momento contiene: %o elementi", tf, this.spot.length);
-	this.spot.unshift(tf.name);
-      } else if (tf.name.match(/^altri_/)) {
-	this.altri.unshift(tf.name);
-      }
-    } else {
-      this.addEntry(node, entries[i]);
-    }
+    this.addFile(entries[i]);
   }
 
   // Continue reading.
   reader.readEntries(this.didReadEntries.bind(this, dir, reader), error);
 };
 
-Filer.prototype.addEntry = function(parentNode, entry, file) {
-  var li = createElement('li', {title: entry.name});
-  var node = createElement('div');
-  node.classList.add(entry.isFile ? 'file' : 'dir');
-  node.classList.add('entry');
-  var a = createElement('a', {href: '#'});
-  var nameNode = document.createTextNode(entry.name);
-  a.appendChild(nameNode);
-  node.appendChild(a);
-  li.appendChild(node);
-
-  if (chrome.syncFileSystem.getFileStatus) {
-    chrome.syncFileSystem.getFileStatus(entry, function(status) {
-      node.classList.add(status);
-    });
+Filer.prototype.addFile = function(fileEntry) {
+  console.log("file.AddFile Processing entry: %o", fileEntry);
+  if (fileEntry.isFile) {
+    if (fileEntry.name.match(/^video_/)) {
+      this.videos.unshift(fileEntry.name);
+    } else if (fileEntry.name.match(/^spot_/)) {
+      this.spot.unshift(fileEntry.name);
+    } else if (fileEntry.name.match(/^altri_/)) {
+      this.altri.unshift(fileEntry.name);
+    }
   }
-
-  if (!entry.isFile) {
-    console.log('Skipping directory:' + entry.fullPath);
-    return;
-  }
-
-  // Show size in a separate div '<div>[size] KB</div>'
-  var sizeDiv = createElement('div', { 'class':'size' });
-  sizeDiv.appendChild(document.createTextNode(this.formatSize(file.size)));
-  node.appendChild(sizeDiv);
-
-  // Set up click handler to open the file in the video.
-  a.addEventListener('click', function(ev) {
-    this.video.open(nameNode.textContent);
-  }.bind(this));
-
-  parentNode.appendChild(li);
 };
 
 Filer.prototype.showUsage = function() {
