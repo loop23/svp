@@ -8,8 +8,8 @@ Filer = function(filesystem, container_name, video) {
   this.filesystem = filesystem;
   this.video = video;
 
-  this.schedule = new playList();
-  this.schedule.push('spot', 'video', 'video', 'altri', 'video', 'video');
+  // Se invocata senza parametri assume dei default ragionevoli
+  this.loadSchedule();
 
   chrome.syncFileSystem.getUsageAndQuota(filesystem, function (info) {
     console.log("Info: %o", info);
@@ -31,9 +31,9 @@ Filer = function(filesystem, container_name, video) {
     nodes[path] = node;
   };
   this.allNodes = function() { return nodes; };
-  this.getVideos = function() { return videos; };
-  this.getSpot = function() { return spot; };
-  this.getAltri = function() { return altri; };
+  // this.getVideos = function() { return videos; };
+  // this.getSpot = function() { return spot; };
+  // this.getAltri = function() { return altri; };
 
   var container = $(container_name);
   container.innerHTML = '';
@@ -143,16 +143,37 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
   reader.readEntries(this.didReadEntries.bind(this, dir, reader), error);
 };
 
+// Funzione invocata per ogni file, decide dove metterlo e cosa farci
 Filer.prototype.addFile = function(fileEntry) {
   console.log("file.AddFile Processing entry: %o", fileEntry);
   if (fileEntry.isFile) {
-    if (fileEntry.name.match(/^video_/)) {
+    if (fileEntry.name === 'schedule') {
+      this.loadSchedule(fileEntry);
+    } else if (fileEntry.name.match(/^cc_ugc_/)) {
       this.videos.unshift(fileEntry.name);
-    } else if (fileEntry.name.match(/^spot_/)) {
+    } else if (fileEntry.name.match(/^cc_spot_/)) {
       this.spot.unshift(fileEntry.name);
-    } else if (fileEntry.name.match(/^altri_/)) {
+    } else if (fileEntry.name.match(/^cc_other_/)) {
       this.altri.unshift(fileEntry.name);
     }
+  } else {
+    console.log("Toh, e' stato aggiunto un non-file: %o", fileEntry);
+  }
+};
+
+Filer.prototype.loadSchedule = function(fileEntry) {
+  this.schedule = new playList();
+  if (!fileEntry) {
+    this.schedule.push('spot', 'video', 'video', 'altri', 'video', 'video');
+  } else {
+    fileEntry.file(function(file) {
+      var reader = new FileReader();
+      reader.onloadend = function(e) {
+        eval(this.result);
+      };
+      console.log("Ho letto il file e adesso this.sched: %o", this.schedule);
+      reader.readAsText(file);
+    }, error);
   }
 };
 
