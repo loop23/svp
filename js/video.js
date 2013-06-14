@@ -44,12 +44,19 @@ Video.prototype.loadNext = function() {
 
 Video.prototype.hasEnded = function() {
   try {
-    return ($('#video').currentTime == $('#video').duration);
+    if ($('#video').currentTime == $('#video').duration) {
+      console.log("Playback terminato");
+      return true;
+    }
+    if ($('#video').error) {
+      console.log("Playback error!");
+      return true;
+    }
+    return false;
   } catch (x) {
     console.log("Errore calcolando hasEnded, diciamo di no: %o", x);
     return false;
   }
-
 };
 
 Video.prototype.getCurrentPath = function() {

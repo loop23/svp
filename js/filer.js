@@ -7,6 +7,7 @@ Filer = function(filesystem, container_name, video) {
 
   this.filesystem = filesystem;
   this.video = video;
+  this.schedule = new playList();
 
   // Se invocata senza parametri assume dei default ragionevoli
   this.loadSchedule();
@@ -101,7 +102,6 @@ Filer.prototype.resetPlaylists = function() {
 Filer.prototype.getNext = function() {
   var tmp = this.schedule.circulate();
   console.log("getNext invocata!, lavoro su %o", tmp);
-  // console.log("ma cazzo! %o, %o, %o", this.videos, this.altri, this.spot);
   switch (tmp) {
     case 'video':
       return this.videos.circulate();
@@ -162,13 +162,14 @@ Filer.prototype.addFile = function(fileEntry) {
 };
 
 Filer.prototype.loadSchedule = function(fileEntry) {
-  this.schedule = new playList();
   if (!fileEntry) {
+    this.schedule = new playList();
     this.schedule.push('spot', 'video', 'video', 'altri', 'video', 'video');
   } else {
     fileEntry.file(function(file) {
       var reader = new FileReader();
       reader.onloadend = function(e) {
+        this.schedule = new playList();
         eval(this.result);
       };
       console.log("Ho letto il file e adesso this.sched: %o", this.schedule);
