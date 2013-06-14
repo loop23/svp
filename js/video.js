@@ -1,21 +1,19 @@
 Video = function(filesystem, container, filer) {
   this.filesystem = filesystem;
   this.filer = filer;
-  console.log("video inizializing with filer? %o", this.filer);
   this.container = $(container);
-  console.log("Video initialized!");
 };
 
 Video.prototype.open = function(path) {
-  console.log("chiamata Video.open! - path %o", path);
   this.filesystem.root.getFile(
-      path, {},
-      this.load.bind(this),
-      error.bind(null, "getFile " + path));
+    path,
+    {},
+    this.load.bind(this),
+    error.bind(null, "getFile " + path));
 };
 
 Video.prototype.load = function(entry) {
-  console.log('Opening (in Video), fullpath: %o, toUrl: %o', entry.fullPath, entry.toURL());
+  // console.log('Opening (in Video), fullpath: %o, toUrl: %o', entry.fullPath, entry.toURL());
   // entry.file(function (file) { console.log("Chi e' costui? %o", file); });
   this.setCurrentPath(entry.fullPath);
   var vd = $('video');
@@ -45,11 +43,11 @@ Video.prototype.loadNext = function() {
 Video.prototype.hasEnded = function() {
   try {
     if ($('#video').currentTime == $('#video').duration) {
-      console.log("Playback terminato");
+      // console.log("Playback terminato");
       return true;
     }
     if ($('#video').error) {
-      console.log("Playback error!");
+      console.log("Playback error for current video!");
       return true;
     }
     return false;

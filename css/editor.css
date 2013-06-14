@@ -1,5 +1,4 @@
 body {
-  font-family: Verdana, Arial, Helvetica, "Liberation Sans", sans-serif;
   color: #fff;
   background: #000;
 }
@@ -190,10 +189,11 @@ body {
 /* Editor -----------------------------------------------------*/
 
 .editor {
-  float: left;
-  margin-left: 10px;
-  height: 800px;
-  width: 600px;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 1920px;
+  height: 1080px;
 }
 
 #editor-path {

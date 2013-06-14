@@ -13,10 +13,8 @@ Filer = function(filesystem, container_name, video) {
   this.loadSchedule();
 
   chrome.syncFileSystem.getUsageAndQuota(filesystem, function (info) {
-    console.log("Info: %o", info);
+    console.log("Filesystem info: %o", info);
   });
-
-  console.log("filer ha video? %o", video);
 
   // Directory path => ul node mapping.
   var nodes = {};
@@ -24,11 +22,9 @@ Filer = function(filesystem, container_name, video) {
   // Le mie playlist separate - e' inutile inizializzarle qui, lo fara' reload
   // this.resetPlaylists();
   this.getListNode = function(path) {
-    // console.log("getListNode for %o", path);
     return nodes[path];
   };
   this.setListNode = function(path, node) {
-    // console.log("Setting node %o at path %o", node, path);
     nodes[path] = node;
   };
   this.allNodes = function() { return nodes; };
@@ -66,13 +62,14 @@ Filer = function(filesystem, container_name, video) {
   } else {
     chrome.syncFileSystem.onFileStatusChanged.addListener(
       function(detail) {
-	console.log("Callback per onFileStatusChanged, detail: %o", detail);
+	console.log("E' cambiato qualcosa sul filesystem!!: %o", detail);
 	if (detail.direction == 'remote_to_local') {
 	  info('File ' + detail.fileEntry.fullPath +
                ' is ' + detail.action + ' by background sync.');
 	  if (detail.action == "added") {
 	    this.addFile(detail.fileEntry);
 	  } else {
+	    // Un po' brutale..
 	    this.reload();
 	  }
 	}
@@ -90,7 +87,7 @@ Filer = function(filesystem, container_name, video) {
 	console.log("onServiceStatusChanged with detail: %o", detail);
       }.bind(this));
   };
-  console.log("filer initialized");
+  // console.log("filer initialized");
 };
 
 Filer.prototype.resetPlaylists = function() {
@@ -101,7 +98,7 @@ Filer.prototype.resetPlaylists = function() {
 
 Filer.prototype.getNext = function() {
   var tmp = this.schedule.circulate();
-  console.log("getNext invocata!, lavoro su %o", tmp);
+  console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
   switch (tmp) {
     case 'video':
       return this.videos.circulate();
@@ -116,7 +113,7 @@ Filer.prototype.getNext = function() {
 
 Filer.prototype.list = function(dir) {
   // TODO(kinuko): This should be queued up.
-  console.log("Invocata list per dir %o", dir);
+  // console.log("Invocata list per dir %o", dir);
   var node = this.getListNode(dir.fullPath);
   if (node.fetching)
     return;
@@ -128,7 +125,7 @@ Filer.prototype.list = function(dir) {
 Filer.prototype.didReadEntries = function(dir, reader, entries) {
   var node = this.getListNode(dir.fullPath);
   if (!entries.length) {
-    console.log("entries vuoto - ovvero ha finito!");
+    console.log("Finito di leggere entries!");
     node.fetching = false;
     return;
   }
@@ -138,7 +135,6 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
   for (var i = 0; i < entries.length; ++i) {
     this.addFile(entries[i]);
   }
-
   // Continue reading.
   reader.readEntries(this.didReadEntries.bind(this, dir, reader), error);
 };
