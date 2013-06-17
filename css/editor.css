@@ -1,6 +1,6 @@
 body {
-  color: #fff;
-  background: #000;
+  color: #000;
+  background: #fcdf2d;
 }
 
 .hide {
@@ -8,7 +8,7 @@ body {
 }
 
 .info {
-  color: #930;
+  color: #310;
   font-size: 12px;
   clear: both;
 }
@@ -24,7 +24,7 @@ body {
   color: #666;
   font-size: 12px;
   clear: both;
-  border-top: solid 1px #ccc;
+  /* border-top: solid 1px #ccc; */
   padding: 3px;
 }
 
@@ -65,7 +65,7 @@ body {
   width: 250px;
   float: left;
   padding: 2px;
-  border-right: solid 1px #ccc;
+  display: none;
 }
 
 .filer-tools {

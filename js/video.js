@@ -41,18 +41,19 @@ Video.prototype.loadNext = function() {
 };
 
 Video.prototype.hasEnded = function() {
+  var v = $('#video');
   try {
-    if ($('#video').currentTime == $('#video').duration) {
+    if (v.currentTime == v.duration) {
       // console.log("Playback terminato");
       return true;
     }
-    if ($('#video').error) {
-      console.log("Playback error for current video!");
+    if (v.error) {
+      console.log("Playback error for video: %o", v.currentSrc);
       return true;
     }
     return false;
   } catch (x) {
-    console.log("Errore calcolando hasEnded, diciamo di no: %o", x);
+    console.log("Errore calcolando hasEnded, diciamo di no: %o, currentSrc:", v.currentSrc);
     return false;
   }
 };

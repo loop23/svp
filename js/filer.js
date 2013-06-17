@@ -98,7 +98,7 @@ Filer.prototype.resetPlaylists = function() {
 
 Filer.prototype.getNext = function() {
   var tmp = this.schedule.circulate();
-  console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
+  // console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
   switch (tmp) {
     case 'video':
       return this.videos.circulate();
