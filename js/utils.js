@@ -49,7 +49,7 @@ function info(msg) {
 }
 
 function error(msg) {
-//  console.log('ERROR: ', arguments);
+  console.log('ERROR: ', arguments);
   var message = '';
   for (var i = 0; i < arguments.length; i++) {
     var description = '';
@@ -81,6 +81,7 @@ function error(msg) {
       message += arguments[i] + ' ';
     }
   }
+  message += "At:" + this.caller;
   var e = $('#error');
   e.innerText = 'ERROR:' + message;
   e.classList.remove('hide');

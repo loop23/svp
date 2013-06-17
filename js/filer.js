@@ -87,7 +87,7 @@ Filer = function(filesystem, container_name, video) {
 	console.log("onServiceStatusChanged with detail: %o", detail);
       }.bind(this));
   };
-  // console.log("filer initialized");
+  console.log("filer initialized");
 };
 
 Filer.prototype.resetPlaylists = function() {
@@ -98,7 +98,7 @@ Filer.prototype.resetPlaylists = function() {
 
 Filer.prototype.getNext = function() {
   var tmp = this.schedule.circulate();
-  // console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
+  console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
   switch (tmp) {
     case 'video':
       return this.videos.circulate();
@@ -113,7 +113,7 @@ Filer.prototype.getNext = function() {
 
 Filer.prototype.list = function(dir) {
   // TODO(kinuko): This should be queued up.
-  // console.log("Invocata list per dir %o", dir);
+  console.log("Invocata list per dir %o", dir);
   var node = this.getListNode(dir.fullPath);
   if (node.fetching)
     return;
@@ -157,18 +157,26 @@ Filer.prototype.addFile = function(fileEntry) {
   }
 };
 
+// Loads schedule. If fileEntry is provided, loads it from there, otherwise
+// loads a reasonable default
 Filer.prototype.loadSchedule = function(fileEntry) {
   if (!fileEntry) {
     this.schedule = new playList();
     this.schedule.push('spot', 'video', 'video', 'altri', 'video', 'video');
   } else {
+    this.schedule = new playList;
+    // Var to clojure over
+    var tmp = this.schedule;
     fileEntry.file(function(file) {
       var reader = new FileReader();
       reader.onloadend = function(e) {
-        this.schedule = new playList();
-        eval(this.result);
+	console.log("Finito di leggere la schedule, testo: %o", this.result);
+	var items = this.result.match(/[a-z,]+/)[0].split(',');
+	console.log("items: %o", items);
+	for (i in items) {
+	  tmp.push(items[i]);
+	}
       };
-      console.log("Ho letto il file e adesso this.sched: %o", this.schedule);
       reader.readAsText(file);
     }, error);
   }
