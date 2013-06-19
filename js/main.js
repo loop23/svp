@@ -14,8 +14,10 @@ function onFileSystemOpened(fs) {
   console.log('Got filer!');
   window.filer = filer;
   video.filer = filer;
-  // Rimetto questo polling, ended e' ancora inaffidabile; Inoltre inizializza la app
-  // non appena c'e' qualcosa di visualizzare
+  // Ora dovrebbe essere ok chiamare loadNext.. ma invece?
+  // Per ora mi accontento di questo timeout
+  setTimeout(function() { video.loadNext(); }, 1000);
+  // Rimetto questo polling, ended e' ancora inaffidabile!
   setInterval(function(){
     if (video.hasEnded()) {
       console.log("Ha finito playing!");

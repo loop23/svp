@@ -16,8 +16,6 @@ Filer = function(filesystem, container_name, video) {
     console.log("Filesystem info: %o", info);
   });
 
-  this.saveTimestampFile();
-
   // Directory path => ul node mapping.
   var nodes = {};
 
@@ -203,29 +201,6 @@ Filer.prototype.showUsage = function() {
       function(usage, quota) {
         $('#filer-usage').innerText =
             'Usage:' + this.formatSize(usage);
-      }.bind(this));
-};
-
-// This function creates a timestamp file. Useful both for debugging purposes,
-// and to create the directory on google drive if need be.
-Filer.prototype.saveTimestampFile = function() {
-  var name = new Date().getTime();
-  log('Saving to:' + name);
-  this.filesystem.root.getFile(
-      name, {create: true},
-      function(entry) {
-        entry.createWriter(function (writer) {
-          writer.truncate(0);
-          writer.onerror = error.bind(null, 'writer.truncate');
-          writer.onwriteend = function() {
-            var content = "";
-            var blob = new Blob([content]);
-            var size = content.length;
-            writer.write(blob);
-            writer.onerror = error;
-            writer.onwriteend = function() { log("Saved: " + name); };
-          }.bind(this);
-        }.bind(this));
       }.bind(this));
 };
 

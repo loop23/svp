@@ -52,7 +52,7 @@ Video.prototype.hasEnded = function() {
       return true;
     }
     // if (v.title === '') {
-    //   console.log("Video senza title, diciamo non sta playando");
+    //   console.log("Video senza title, diciamo che non sta playando");
     //   return true;
     // }
     return false;
