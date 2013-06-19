@@ -162,7 +162,7 @@ Filer.prototype.addFile = function(fileEntry) {
 Filer.prototype.loadSchedule = function(fileEntry) {
   if (!fileEntry) {
     this.schedule = new playList();
-    this.schedule.push('spot', 'video', 'video', 'altri', 'video', 'video');
+    this.schedule.push('spot', 'video', 'video', 'video', 'video');
   } else {
     this.schedule = new playList;
     // Var to clojure over

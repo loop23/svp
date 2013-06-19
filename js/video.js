@@ -37,7 +37,9 @@ Video.prototype.load = function(entry) {
 };
 
 Video.prototype.loadNext = function() {
-  this.open(this.filer.getNext());
+  var tmp = this.filer.getNext();
+  if (tmp)
+    this.open(tmp);
 };
 
 Video.prototype.hasEnded = function() {
