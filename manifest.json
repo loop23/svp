@@ -1,6 +1,6 @@
 {
   "name": "SyncVideo",
-  "version": "0.3.2",
+  "version": "0.3.5",
   "manifest_version": 2,
   "description": "Video Player with synced filesystem",
   "icons": {
@@ -14,6 +14,5 @@
     }
   },
   "permissions": ["syncFileSystem",
-		  "fullscreen"],
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+		  "fullscreen"]
 }
