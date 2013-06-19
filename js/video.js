@@ -51,10 +51,10 @@ Video.prototype.hasEnded = function() {
       console.log("Playback error for video: %o", v.currentSrc);
       return true;
     }
-    if (v.title === '') {
-      console.log("Video senza title, diciamo che non sta playando");
-      return true;
-    }
+    // if (v.title === '') {
+    //   console.log("Video senza title, diciamo non sta playando");
+    //   return true;
+    // }
     return false;
   } catch (x) {
     console.log("Errore calcolando hasEnded, diciamo di no: %o, currentSrc:", v.currentSrc);
