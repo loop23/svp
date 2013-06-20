@@ -1,6 +1,6 @@
 {
   "name": "SyncVideo",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "manifest_version": 2,
   "description": "Video Player with synced filesystem",
   "icons": {
