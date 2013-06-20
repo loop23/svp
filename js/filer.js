@@ -12,10 +12,6 @@ Filer = function(filesystem, container_name, video) {
   // Se invocata senza parametri assume dei default ragionevoli
   this.loadSchedule();
 
-  chrome.syncFileSystem.getUsageAndQuota(filesystem, function (info) {
-    console.log("Filesystem info: %o", info);
-  });
-
   // Directory path => ul node mapping.
   var nodes = {};
 
@@ -50,43 +46,12 @@ Filer = function(filesystem, container_name, video) {
 
   this.reload = function() {
     rootNode.innerHTML = '';
-    this.showUsage();
     this.resetPlaylists();
     this.list(filesystem.root);
   };
   $('#filer-reload').addEventListener('click', this.reload.bind(this));
   this.reload();
 
-  if (!chrome.syncFileSystem.onFileStatusChanged) {
-    error("onFileSystemStatusChanged unsupported. Maybe too new or too old browser!");
-  } else {
-    chrome.syncFileSystem.onFileStatusChanged.addListener(
-      function(detail) {
-	console.log("E' cambiato qualcosa sul filesystem!!: %o", detail);
-	if (detail.direction == 'remote_to_local') {
-	  info('File ' + detail.fileEntry.fullPath +
-               ' is ' + detail.action + ' by background sync.');
-	  if (detail.action == "added") {
-	    this.addFile(detail.fileEntry);
-	  } else {
-	    // Un po' brutale..
-	    this.reload();
-	  }
-	}
-	// this.reload();
-      }.bind(this));
-  };
-
-  if (!chrome.syncFileSystem.onServiceStatusChanged) {
-    error("onServiceStatusChanged unsupported. Maybe too new or too old browser!");
-  } else {
-    chrome.syncFileSystem.onServiceStatusChanged.addListener(
-      function(detail) {
-	log('Service state updated: ' + detail.state + ': '
-          + detail.description);
-	console.log("onServiceStatusChanged with detail: %o", detail);
-      }.bind(this));
-  };
   console.log("filer initialized");
 };
 
@@ -180,28 +145,6 @@ Filer.prototype.loadSchedule = function(fileEntry) {
       reader.readAsText(file);
     }, error);
   }
-};
-
-Filer.prototype.showUsage = function() {
-  if (chrome.syncFileSystem) {
-    chrome.syncFileSystem.getUsageAndQuota(
-      this.filesystem,
-      function(info) {
-        if (chrome.runtime.lastError) {
-          error('getUsageAndQuota: ' + chrome.runtime.lastError.message);
-          return;
-        }
-        $('#filer-usage').innerText =
-            'Usage:' + this.formatSize(info.usageBytes);
-      }.bind(this));
-    return;
-  }
-  webkitStorageInfo.queryUsageAndQuota(
-      this.filesystem,
-      function(usage, quota) {
-        $('#filer-usage').innerText =
-            'Usage:' + this.formatSize(usage);
-      }.bind(this));
 };
 
 Filer.prototype.formatSize = function(size) {

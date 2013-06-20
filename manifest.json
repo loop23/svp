@@ -1,8 +1,8 @@
 {
-  "name": "SyncVideo",
+  "name": "LocalVideo",
   "version": "0.3.8",
   "manifest_version": 2,
-  "description": "Video Player with synced filesystem",
+  "description": "Video Player with local filesystem",
   "icons": {
     "16": "img/icon-16.png",
     "24": "img/icon-24.png",
@@ -13,6 +13,9 @@
       "scripts": ["js/background.js"]
     }
   },
-  "permissions": ["syncFileSystem",
-		  "fullscreen"]
+  "permissions": ["unlimitedStorage",
+		  // "syncFileSystem",
+		  "fullscreen",
+		  "http://madre-dam.atcloud.it/",
+		  "https://madre-dam.atcloud.it/" ]
 }
