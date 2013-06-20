@@ -65,7 +65,6 @@ body {
 .filer {
   height: 400px;
   width: 250px;
-  float: left;
   padding: 2px;
   display: none;
 }
@@ -190,19 +189,11 @@ body {
 
 /* Editor -----------------------------------------------------*/
 
-.editor {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  width: 100%;
-  height: 100%;
-}
-
 #video {
    margin: 0px;
    padding: 0px;
-   width: 100%;
-   height: 100%;
+   width: 1280px;
+   height: 720px;
 }
 
 #editor-path {
