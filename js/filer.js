@@ -9,6 +9,7 @@ Filer = function(filesystem, container_name, video) {
   this.video = video;
   this.schedule = new playList();
 
+  this.setupFiles();
   // Se invocata senza parametri assume dei default ragionevoli
   this.loadSchedule();
 
@@ -155,4 +156,84 @@ Filer.prototype.formatSize = function(size) {
   }
   size = Math.floor(size);
   return size + ' ' + ['', 'K', 'M', 'G', 'T'][unit] + 'B';
+};
+
+Filer.prototype.parsePlaylist = function(playlist_as_text) {
+  console.log("I have this playlist:%o", playlist_as_text);
+  playlist_as_text.split("\n").forEach(function(line) {
+    var md = line.match(/.+\/(.+)\?(\d+)$/);
+    if (md) {
+      var url = md[0];
+      var filename = md[1];
+      var timestamp = md[2];
+      if (! this.fileExistsLocally(filename)) {
+	this.downloadFile(url, filename);
+      }
+    }
+  });
+};
+
+Filer.prototype.downloadFile = function(url, filename) {
+  this.filesystem.root.getFile(filename,
+			       { create: true,
+			         exclusive: true },
+			       function(fileEntry) {
+    // Create a FileWriter object for our FileEntry
+    fileEntry.createWriter(function(fileWriter) {
+      fileWriter.onwriteend = function(e) {
+	console.log("Write completed: %o", e);
+	// Chiamare qualche funzione per riindicizzare
+	if (filename === 'playlist') {
+	  this.readPlaylist();
+	}
+      };
+      fileWriter.onerror = function(e) {
+        console.log('Write failed: ' + e.toString());
+      };
+      // Make request for fixed file
+      var oReq = new XMLHttpRequest;
+      oReq.open("GET", url, true);
+      oReq.responseType = "blob";
+      var filecontent;
+      oReq.addEventListener("progress", function(p) {
+	console.log("We have some progress here downloading: %o", url);
+      }, false);
+      // Funzione che scrive il blob quando abbiamo la risposta
+      oReq.onload = function(oEvent) {
+	filecontent = oReq.response;
+        fileWriter.write(filecontent);
+      };
+      oReq.send();
+    }, error).bind(this);
+  }, error);
+};
+
+// Legge la playlist locale e invoca il suo parser
+Filer.prototype.readPlaylist = function() {
+  this.filesystem.root.getFile('playlist',
+			       { create: true },
+			       function(fileEntry) {
+    // Get a File object representing the file,
+    // then use FileReader to read its contents.
+    fileEntry.file(function(file) {
+       var reader = new FileReader();
+       reader.onloadend = function(e) {
+	 this.parsePlaylist(this.result);
+       };
+       reader.readAsText(file);
+    }, error);
+  }, error);
+};
+
+// Cancella la playlist e poi la ricarica. Che manco va benissimo.
+Filer.prototype.setupFiles = function() {
+  this.filesystem.root.getFile('playlist',
+			       { create: false },
+			       function(fileEntry) {
+    fileEntry.remove(function() {
+      console.log("Rimosso playlist");
+    });
+  });
+  this.downloadFile('http://madre-dam.atcloud.it/playlists/1.txt',
+		    'playlist');
 };
