@@ -18,7 +18,7 @@ Video.prototype.load = function(entry) {
   this.setCurrentPath(entry.fullPath);
   var vd = $('video');
   vd.src = entry.toURL();
-  vd.loop = false;
+  vd.removeAttribute('controls');
   vd.play();
   // // Maledetto, se glielo setto subito non lo prende, e manco con la cb.
   // Una volta pero' se l'era presa e aumentava ogni volta!
