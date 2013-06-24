@@ -9,13 +9,13 @@ Filer = function(filesystem, container_name, video) {
   this.video = video;
   this.schedule = new playList();
 
-  this.setupFiles();
+  // this.setupFiles();
   // Se invocata senza parametri assume dei default ragionevoli
   this.loadSchedule();
 
   // Directory path => ul node mapping.
   var nodes = {};
-
+  var local_files = [];
   // Le mie playlist separate - e' inutile inizializzarle qui, lo fara' reload
   // this.resetPlaylists();
   this.getListNode = function(path) {
@@ -24,7 +24,7 @@ Filer = function(filesystem, container_name, video) {
   this.setListNode = function(path, node) {
     nodes[path] = node;
   };
-  this.allNodes = function() { return nodes; };
+  // this.allNodes = function() { return nodes; };
   // this.getVideos = function() { return videos; };
   // this.getSpot = function() { return spot; };
   // this.getAltri = function() { return altri; };
@@ -83,6 +83,7 @@ Filer.prototype.list = function(dir) {
   var node = this.getListNode(dir.fullPath);
   if (node.fetching)
     return;
+  this.local_files = [];
   node.fetching = true;
   var reader = dir.createReader();
   reader.readEntries(this.didReadEntries.bind(this, dir, reader), error);
@@ -108,9 +109,12 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
 // Funzione invocata per ogni file, decide dove metterlo e cosa farci
 Filer.prototype.addFile = function(fileEntry) {
   console.log("file.AddFile Processing entry: %o", fileEntry);
+  this.local_files.push(fileEntry.name);
   if (fileEntry.isFile) {
     if (fileEntry.name === 'schedule') {
       this.loadSchedule(fileEntry);
+    } else if (fileEntry.name === 'playlist') {
+      this.readPlaylist();
     } else if (fileEntry.name.match(/^cc_ugc_/)) {
       this.videos.unshift(fileEntry.name);
     } else if (fileEntry.name.match(/^cc_spot_/)) {
@@ -166,14 +170,24 @@ Filer.prototype.parsePlaylist = function(playlist_as_text) {
       var url = md[0];
       var filename = md[1];
       var timestamp = md[2];
-      if (! this.fileExistsLocally(filename)) {
-	this.downloadFile(url, filename);
+      if (! filer.fileExistsLocally(filename)) {
+	filer.downloadFile("http://madre-dam.atcloud.it/" + url, filename);
       }
+    } else {
+      console.log("Linea non parsabile: %o", line);
     }
   });
 };
 
+Filer.prototype.fileExistsLocally = function(filename) {
+  if (this.local_files.indexOf(filename) >= 0)
+    return true;
+  else
+    return false;
+};
+
 Filer.prototype.downloadFile = function(url, filename) {
+  console.log("Richiesto download di %o su filename: %o", url, filename);
   this.filesystem.root.getFile(filename,
 			       { create: true,
 			         exclusive: true },
@@ -184,7 +198,7 @@ Filer.prototype.downloadFile = function(url, filename) {
 	console.log("Write completed: %o", e);
 	// Chiamare qualche funzione per riindicizzare
 	if (filename === 'playlist') {
-	  this.readPlaylist();
+	  filer.readPlaylist();
 	}
       };
       fileWriter.onerror = function(e) {
@@ -204,21 +218,21 @@ Filer.prototype.downloadFile = function(url, filename) {
         fileWriter.write(filecontent);
       };
       oReq.send();
-    }, error).bind(this);
+    }, error);
   }, error);
 };
 
 // Legge la playlist locale e invoca il suo parser
 Filer.prototype.readPlaylist = function() {
   this.filesystem.root.getFile('playlist',
-			       { create: true },
+			       { create: false },
 			       function(fileEntry) {
     // Get a File object representing the file,
     // then use FileReader to read its contents.
     fileEntry.file(function(file) {
        var reader = new FileReader();
        reader.onloadend = function(e) {
-	 this.parsePlaylist(this.result);
+	 filer.parsePlaylist(this.result);
        };
        reader.readAsText(file);
     }, error);

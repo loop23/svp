@@ -50,7 +50,9 @@ Video.prototype.hasEnded = function() {
       return true;
     }
     if (v.error) {
-      console.log("Playback error for video: %o", v.currentSrc);
+      console.log("Playback error %o for video %o",
+		  v.error.toString(),
+		  v.currentSrc);
       return true;
     }
     // if (v.title === '') {
@@ -71,3 +73,4 @@ Video.prototype.getCurrentPath = function() {
 Video.prototype.setCurrentPath = function(path) {
   $('#editor-path').innerText = path;
 };
+

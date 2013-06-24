@@ -133,3 +133,38 @@ function simulatedClick(target, op) {
   //Fire the event
   target.dispatchEvent(event);
 }
+
+
+MediaError.prototype.toString = function mets() {
+    var msg = '';
+    switch (this.code) {
+	case MediaError.MEDIA_ERR_ABORTED:
+	  msg = 'Aborted';
+	  break;
+	case MediaError.MEDIA_ERR_DECODE:
+	  msg = 'Decode';
+	  break;
+	case MediaError.MEDIA_ERR_ENCRYPTED:
+	  msg = 'Encrypted';
+	  break;
+	case MediaError.MEDIA_ERR_NETWORK:
+	  msg = 'Network';
+	  break;
+	case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+  	  msg = "Source not supported (media type?)";
+	  break;
+	default:
+	  msg = "Other error:" + this.code;
+    }
+    return "MediaError: " + msg;
+};
+
+FileError.prototype.toString = function() {
+  var msg = '';
+  switch (this.code) {
+    case 9:
+      msg = 'Modifica non valida';
+      break;
+  }
+  return "FileError: " + msg;
+};
