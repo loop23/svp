@@ -15,7 +15,7 @@ Filer = function(filesystem, container_name, video) {
 
   // Directory path => ul node mapping.
   var nodes = {};
-  var local_files = [];
+  this.local_files = [];
   // Le mie playlist separate - e' inutile inizializzarle qui, lo fara' reload
   // this.resetPlaylists();
   this.getListNode = function(path) {
@@ -121,6 +121,8 @@ Filer.prototype.addFile = function(fileEntry) {
       this.spot.unshift(fileEntry.name);
     } else if (fileEntry.name.match(/^cc_other_/)) {
       this.altri.unshift(fileEntry.name);
+    } else {
+      console.log("Aggiunto file inutile: %o", fileEntry.name);
     }
   } else {
     console.log("Toh, e' stato aggiunto un non-file: %o", fileEntry);
@@ -132,7 +134,7 @@ Filer.prototype.addFile = function(fileEntry) {
 Filer.prototype.loadSchedule = function(fileEntry) {
   if (!fileEntry) {
     this.schedule = new playList();
-    this.schedule.push('spot', 'video', 'video', 'video', 'video');
+    this.schedule.push('spot', 'video', 'altri', 'video', 'video', 'video');
   } else {
     this.schedule = new playList;
     // Var to clojure over
@@ -171,7 +173,7 @@ Filer.prototype.parsePlaylist = function(playlist_as_text) {
       var filename = md[1];
       var timestamp = md[2];
       if (! filer.fileExistsLocally(filename)) {
-	filer.downloadFile("http://madre-dam.atcloud.it/" + url, filename);
+	filer.downloadFile(url, filename);
       }
     } else {
       console.log("Linea non parsabile: %o", line);
@@ -195,27 +197,37 @@ Filer.prototype.downloadFile = function(url, filename) {
     // Create a FileWriter object for our FileEntry
     fileEntry.createWriter(function(fileWriter) {
       fileWriter.onwriteend = function(e) {
-	console.log("Write completed: %o", e);
-	// Chiamare qualche funzione per riindicizzare
-	if (filename === 'playlist') {
-	  filer.readPlaylist();
-	}
-      };
+	console.log("Write completed: for file %o", filename);
+	filer.filesystem.root.getFile(filename,
+				      { create: false },
+				      function(fileEntry) {
+    	  filer.addFile(fileEntry);
+        }
+      );};
       fileWriter.onerror = function(e) {
-        console.log('Write failed: ' + e.toString());
+        console.log('Write failed for file: %o, errore: %o: ', filename, e.toString());
       };
       // Make request for fixed file
       var oReq = new XMLHttpRequest;
       oReq.open("GET", url, true);
       oReq.responseType = "blob";
-      var filecontent;
+      var count = 0;
       oReq.addEventListener("progress", function(p) {
-	console.log("We have some progress here downloading: %o", url);
+	if (p.lengthComputable) {
+	  if (count % 500 == 0) {
+	    var pct = (p.loaded / p.total * 100).toFixed(2);
+	    console.log("Downloading %o, %o% done", url, pct);
+	  }
+	  count += 1;
+	}
       }, false);
       // Funzione che scrive il blob quando abbiamo la risposta
       oReq.onload = function(oEvent) {
-	filecontent = oReq.response;
-        fileWriter.write(filecontent);
+	console.log("Download terminato, entro in metodo costoso");
+	for (i = 0; i < oReq.response.size ; i ++) {
+          fileWriter.write(oReq.response[i]);
+	}
+	console.log("Write terminato");
       };
       oReq.send();
     }, error);
@@ -241,13 +253,21 @@ Filer.prototype.readPlaylist = function() {
 
 // Cancella la playlist e poi la ricarica. Che manco va benissimo.
 Filer.prototype.setupFiles = function() {
-  this.filesystem.root.getFile('playlist',
-			       { create: false },
-			       function(fileEntry) {
-    fileEntry.remove(function() {
-      console.log("Rimosso playlist");
-    });
-  });
+  this.deleteFile('playlist');
   this.downloadFile('http://madre-dam.atcloud.it/playlists/1.txt',
 		    'playlist');
+};
+
+Filer.prototype.deleteFile = function(filename) {
+  this.filesystem.root.getFile(filename,
+			      { create: false },
+			      function(fileEntry) {
+    fileEntry.remove(function() {
+      console.log("Rimosso " + filename);
+      var i = this.local_files.indexOf(filename);
+      if (i >= 0) {
+	this.local_files.splice(i, 1);
+      }
+    });
+  });
 };
