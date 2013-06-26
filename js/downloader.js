@@ -1,57 +1,63 @@
 /* This object downloads files, trying to be smart about it. */
 Downloader = function(filesystem, filer) {
+
+  // At the beginning it's none
   this.downloads_in_progress = [];
+  var CHUNK_SIZE = 1024 * 1024;
+
+  // Takes a XMLHttpRequest and returns hash with content range info.
   this.parseReqChunks = function(req) {
     var md = req.getResponseHeader("Content-Range").match(/(\d+)-(\d+)\/(\d+)/);
+    if (!md) {
+      return {};
+    }
     var start = md[1];
     var end = md[2];
     var total = md[3];
-    return [start, end, total];
-}
+    return {start: start,
+	    end: end,
+	    total: total };
+  };
+
+  this.isReqSingleChunk = function(req) {
+    var info = this.parseReqChunks(req);
+    if ((info['start'] == 0) && ((info['end'] + 1) == info['total']))
+      return true;
+    else
+      return false;
+  };
+
+  this.isReqFirstChunk = function(req) {
+    var info = this.parseReqChunks(req);
+    if ((info['start'] == 0) && ((info['end'] + 1) < info['total']))
+      return true;
+    else
+      return false;
+  };
+
+  this.isReqMiddleChunk = function(req) {
+    var info = this.parseReqChunks(req);
+    if ((info['start'] > 0) && ((info['end'] + 1) < info['total']))
+      return true;
+    else
+      return false;
+  };
+
+  this.isReqLastChunk = function(req) {
+    var info = this.parseReqChunks(req);
+    if ((info['start'] > 0) && ((info['end'] + 1) == info['total']))
+      return true;
+    else
+      return false;
+  };
+
 };
 
-function parseReqChunks(req)
-
-function isReqSingleChunk(req) {
-  var start, end, total = parseReqChunks(req);
-  if ((start == 0) && ((end + 1) == total))
-    return true;
-  else
-    return false;
-}
-
-function isReqFirstChunk(req) {
-  var start, end, total = parseReqChunks(req);
-  if ((start == 0) && ((end + 1) < total))
-    return true;
-  else
-    return false;
-}
-
-function isReqMiddleChunk(req) {
-  var start, end, total = parseReqChunks(req);
-  if ((start > 0) && ((end + 1) < total))
-    return true;
-  else
-    return false;
-}
-
-function isReqLastChunk(req) {
-  var start, end, total = parseReqChunks(req);
-  if ((start > 0) && ((end + 1) == total))
-    return true;
-  else
-    return false;
-}
-
-var CHUNK_SIZE = 1024 * 1024;
-// Dovrebbe essere spostata in un modulo a se', per gestire i partial get per
-// i file grossi.
+// Downloads a file.
 Filer.prototype.downloadFile = function(url, filename, chunk) {
   if (!chunk)
     chunk = 0;
-  console.log("Richiesto download di %o su filename: %o, chunk: %o", url, filename, chunk);
-  // Make request for fixed file
+  console.log("Richiesto download di %o su filename %o, chunk %o", url, filename, chunk);
   var oReq = new XMLHttpRequest;
   // Counter per stamparne solo alcune
   var count = 0;

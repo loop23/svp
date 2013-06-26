@@ -361,5 +361,5 @@ Filer.prototype.deleteFile = function(filename) {
 };
 
 Filer.prototype.toString = function() {
-  return("[Filer con " + this.all_files.length + " elementi in dir e che ne sta scaricando " + this._download_list.length + "]");
+  return("[Filer con " + this.all_files.length + " elementi in dir]");
 };
