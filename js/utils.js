@@ -81,7 +81,6 @@ function error(msg) {
       message += arguments[i] + ' ';
     }
   }
-  message += "At:" + this.caller;
   var e = $('#error');
   e.innerText = 'ERROR:' + message;
   e.classList.remove('hide');
@@ -169,7 +168,14 @@ FileError.prototype.toString = function() {
   return "FileError: " + msg;
 };
 
-// Useful and okish array difference
-Array.prototype.diff = function(a) {
-  return this.filter(function(i) {return !(a.indexOf(i) > -1);});
-};
+// // Useful and okish array difference. Removes from a1 all elements that are in a2
+function arr_diff(a1, a2) {
+  var tmp = a1.slice(0);
+  for (var i=0;i<a2.length;i++) {
+    var v = a2[i];
+    if (tmp.indexOf(v) >= 0) {
+      tmp.splice(tmp.indexOf(v), 1);
+    }
+  }
+  return tmp;
+}

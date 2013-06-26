@@ -17,23 +17,25 @@ Video.prototype.load = function(entry) {
   // entry.file(function (file) { console.log("Chi e' costui? %o", file); });
   this.setCurrentPath(entry.fullPath);
   var vd = $('video');
+  var my_filer = this.filer;
   vd.src = entry.toURL();
   vd.removeAttribute('controls');
   vd.play();
-  // // Maledetto, se glielo setto subito non lo prende, e manco con la cb.
+  // Maledetto, se glielo setto subito non lo prende, e manco con la cb.
   // Una volta pero' se l'era presa e aumentava ogni volta!
-  // setTimeout(function() {
-  //   if (!vd.endedCallbackSet) {
-  //     console.log("Setting callback once");
-  //     // This event is supposed to work from 28.x and some.
-  //     // For the time being better off leaving it commented!
-  //     vd.addEventListener('ended', function(v) {
-  // 	console.log("ended %o", v);
-  // 	filer.getNext();
-  //     });
-  //     vd.endedCallbackSet = true;
-  //   }
-  // } , 1000);
+  setTimeout(function() {
+    if (!vd.endedCallbackSet) {
+      console.log("Setting callback once");
+      // This event is supposed to work from 28.x and some.
+      // For the time being better off leaving it commented!
+      vd.addEventListener('ended', function(v) {
+  	console.log("Triggered ended di video %o", v);
+  	my_filer.getNext();
+      });
+      vd.endedCallbackSet = true;
+      // clearTimeout(my_filer.initial_cb);
+    }
+  } , 5000);
 };
 
 Video.prototype.loadNext = function() {
@@ -45,6 +47,10 @@ Video.prototype.loadNext = function() {
 Video.prototype.hasEnded = function() {
   var v = $('#video');
   try {
+    if (v.ended) {
+      console.log("Il video e' finito, lo dice lui stesso!");
+      return true;
+    }
     if (v.currentTime == v.duration) {
       // console.log("Playback terminato");
       return true;
@@ -78,4 +84,3 @@ Video.prototype.getCurrentPath = function() {
 Video.prototype.setCurrentPath = function(path) {
   $('#editor-path').innerText = path;
 };
-
