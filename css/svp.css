@@ -69,20 +69,6 @@ body {
   display: none;
 }
 
-.filer-tools {
-  margin: 2px 4px;
-  padding: 2px;
-  font-size: 12px;
-  color: #666;
-}
-
-#filer-empty-label {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 12px;
-  color: #ccc;
-}
-
 #filer ul {
   margin: 0;
   padding: 0;

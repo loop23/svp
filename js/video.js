@@ -49,10 +49,15 @@ Video.prototype.hasEnded = function() {
       // console.log("Playback terminato");
       return true;
     }
+    if (v.currentTime == 0) {
+	console.log("Ancora non started? riproviamoci!");
+	return true;
+    }
     if (v.error) {
       console.log("Playback error %o for video %o",
 		  v.error.toString(),
 		  v.currentSrc);
+      filer.deleteFile(v.currentSrc);
       return true;
     }
     // if (v.title === '') {

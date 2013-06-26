@@ -18,12 +18,17 @@ function onFileSystemOpened(fs) {
   // Simula il click, dovrebbe far sparire il cursore
   setTimeout(function() { simulatedClick($('#video')); }, 3000);
   // Qui uso il polling perche' video.ended e' (ancora) inaffidabile
+  console.log("Sto per uscire da main..");
+  filer.reloadPlaylist();
   setInterval(function(){
     if (video.hasEnded()) {
-      console.log("video.hasEnded ha tornato true, carico prossimo");
+      // console.log("video.hasEnded ha tornato true, carico prossimo");
       video.loadNext();
     }
   }, 1000);
+  setInterval(function() {
+    filer.reloadPlaylist();
+  }, 1000 * 60);
 }
 
 function openSyncableFileSystem() {

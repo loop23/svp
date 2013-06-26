@@ -35,14 +35,6 @@ Filer = function(filesystem, container_name, video) {
   var container = $(container_name);
   container.innerHTML = '';
 
-  var tools = createElement('div', {'class': 'filer-tools'});
-  tools.appendChild(createElement('span', {id:'filer-usage'}));
-  tools.appendChild(createElement(
-      'button', {id:'filer-reload', 'class':'button', innerText:'Reload'}));
-  container.appendChild(tools);
-  container.appendChild(createElement(
-      'div', {id:'filer-empty-label', innerText:'-- empty --'}));
-
   // Set up the root node.
   var rootNode = createElement('ul');
   this.setListNode('/', rootNode);
@@ -53,7 +45,6 @@ Filer = function(filesystem, container_name, video) {
     this.resetPlaylists();
     this.list(filesystem.root);
   };
-  $('#filer-reload').addEventListener('click', this.reload.bind(this));
   this.reload();
 
   console.log("filer initialized");
@@ -99,8 +90,6 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
     node.fetching = false;
     return;
   }
-
-  hide('#filer-empty-label');
 
   for (var i = 0; i < entries.length; ++i) {
     this.addFile(entries[i]);
@@ -179,6 +168,7 @@ Filer.prototype.parsePlaylist = function(playlist_as_text) {
   console.log("Hello I'm " + this);
   console.log("I have this playlist text:\n%o", this, playlist_as_text);
   var my_filer = this;
+  this._old_files = this._local_files.slice(0) || [];
   playlist_as_text.split("\n").forEach(function(line) {
     var md = line.match(/.+\/(.+)\?(\d+)$/);
     if (md) {
@@ -190,8 +180,11 @@ Filer.prototype.parsePlaylist = function(playlist_as_text) {
       }
     } else {
       console.log("Linea non parsabile: %o", line);
-    }
+    }					   
   });
+  // Bene, a questo punto dovrei poter cancellare i files che non ho piu'
+  var maybe_delete = this._old_files.diff(this._local_files || []);
+  console.log("Sarebbe da cancellare: %o", maybe_delete);
 };
 
 Filer.prototype.downloadFile = function(url, filename) {
@@ -251,8 +244,8 @@ Filer.prototype.saveResponseToFile = function(response, filename) {
   console.log("in saveResponseToFile for response: %o, filename: %o",
 	      response,
 	      filename);
-
-  var chunksize = 1024 * 1024 * 4;
+  // Proviamo .. 64k?
+  var chunksize = 1024 * 64;
   var my_filer = this;
   this.filesystem.root.getFile(filename,
 			       { create: true,
@@ -306,18 +299,19 @@ Filer.prototype.readPlaylist = function() {
 };
 
 // Cancella la playlist e poi la ricarica. Che manco va benissimo.
-Filer.prototype.setupFiles = function() {
+Filer.prototype.reloadPlaylist = function() {
   this.deleteFile('playlist');
   var my_filer = this;
   setTimeout(function() {
     my_filer.downloadFile('http://madre-dam.atcloud.it/playlists/1.txt',
 			  'playlist');
-  }, 1000);
+  }, 2000);
 };
 
 
 Filer.prototype.deleteFile = function(filename) {
   var my_filer = this;
+  console.log("Chiamato deleteFile con filename: %o", filename);
   this.filesystem.root.getFile(filename,
 			      { create: false },
 			      function(fileEntry) {
