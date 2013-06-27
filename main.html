@@ -8,7 +8,7 @@
   <script type="text/javascript" src="js/downloader.js"></script>
   <title>SyncVideo</title>
 </head>
-<body>
+<body onkeypress="function(e){console.log('ev %o',e);}">
   <div id="error" class="error" class="hide"></div>
   <video id="video" poster="img/bumper_01.gif" controls></video>
   <div class="editor" id="editor" class="hide">

@@ -23,6 +23,8 @@ Downloader = function(filesystem, filer) {
   }
 
   this.canDownload = function(filename) {
+    // if (this.downloads_in_progress.length > 4)
+    //   return false;
     return (!this.isDownloading(filename));
   }
 

@@ -37,25 +37,29 @@ Filer = function(filesystem, container_name, video) {
 
   this.reload();
   this.reloadPlaylist();
-  this.initial_cb = setInterval(function() {
-    if (this.video.hasEnded()) {
-      // console.log("video.hasEnded ha tornato true, carico prossimo");
-      this.video.loadNext();
-    }
-  }, 1000);
+  // this.initial_cb = setInterval(function() {
+  //   if (this.video.hasEnded()) {
+  //     // console.log("video.hasEnded ha tornato true, carico prossimo");
+  //     this.video.loadNext();
+  //   }
+  // }, 5000);
 
   this.clear_initial_cb = function() {
-    if (this.initial_cb == null)
+    console.log("Mi e' arrivato clear_initial_cb da video");
+    if (this.initial_cb == null) {
+      console.log("Ma gia' la tolsi");
       return;
-    console.log("Tolgo la callback iniziale perche' mi e' arrivato evento da video");
-    window.clearInterval(this.initial_cb);
-    this.initial_cb = null;
+    } else {
+      console.log("La tolgo davvero");
+      window.clearInterval(this.initial_cb);
+      this.initial_cb = null;
+    }
   };
 
   // Ogni minuto provo a ricaricare la playlist
-  setInterval(function() {
-    filer.reloadPlaylist();
-  }, 1000 * 60);
+  // setInterval(function() {
+  //   filer.reloadPlaylist();
+  // }, 1000 * 60);
 
   console.log("filer initialized");
 };
@@ -68,7 +72,7 @@ Filer.prototype.reload = function() {
 
 Filer.prototype.getNext = function() {
   var tmp = this.schedule.circulate();
-  // console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
+  console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
   switch (tmp) {
     case 'video':
       return this.playList.circulate('cc_ugc');
@@ -77,6 +81,7 @@ Filer.prototype.getNext = function() {
     case 'altri':
       return this.playList.circulate('cc_other');
     default:
+      console.log("Tipo di asset sconosciuto: %o torno il primo che capita", tmp)
       return this.playList.circulate();
    }
 };
@@ -101,12 +106,14 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
     return;
   }
   for (var i = 0; i < entries.length; ++i) {
-    if (entries[i].name.match(/\.tmp$/)) {
-      entries[i].remove(function() {
-	console.log("Eliminato %o", entries[i].name);
+    var this_e = entries[i];
+    if (this_e.name.match(/\.tmp$/)) {
+      console.log("Provo a eliminare il tmpfile %o", this_e);
+      this_e.remove(function() {
+	console.log("Eliminato %o", this_e);
       });
     } else {
-      this.addFile(entries[i]);
+      this.addFile(this_e);
     }
   }
   // Continue reading.
