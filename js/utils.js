@@ -10,18 +10,6 @@ function hide(q) {
   $(q).classList.add('hide');
 }
 
-function validFileName(path) {
-  if (!path.length) {
-    error('Empty name was given.');
-    return false;
-  }
-  if (path.indexOf('/') >= 0) {
-    error('File name should not contain any slash (/): "' + path + '"');
-    return false;
-  }
-  return true;
-}
-
 function log(msg) {
   $('#log').innerHTML = msg;
   console.log(msg, arguments);
@@ -168,14 +156,30 @@ FileError.prototype.toString = function() {
   return "FileError: " + msg;
 };
 
-// // Useful and okish array difference. Removes from a1 all elements that are in a2
-function arr_diff(a1, a2) {
-  var tmp = a1.slice(0);
+// Just like ruby delete
+Array.prototype.delete = function(item) {
+  var pos = this.indexOf(item);
+  if (pos > -1)
+    return this.splice(pos, 1)[0];
+  else
+    return null;
+};
+
+// Just like ruby include?
+Array.prototype.include = function(item) {
+    if (this.indexOf(item) >= 0)
+	return true;
+    else
+	return false;
+};
+
+// Useful and okish array difference.
+// Returns a new array with all elements of a2 removed from self
+Array.prototype.difference = function(a2) {
+  var tmp = this.slice(0);
   for (var i=0;i<a2.length;i++) {
     var v = a2[i];
-    if (tmp.indexOf(v) >= 0) {
-      tmp.splice(tmp.indexOf(v), 1);
-    }
+    tmp.delete(v);
   }
   return tmp;
-}
+};

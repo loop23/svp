@@ -10,13 +10,8 @@ function onFileSystemOpened(fs) {
   var filer = new Filer(fs, '#filer', video);
   window.filer = filer;
   video.filer = filer;
-  // Ora dovrebbe essere ok chiamare loadNext.. ma invece?
-  // Per ora mi accontento di questo timeout
-  // setTimeout(function() { video.loadNext(); }, 1000);
   // Simula il click, dovrebbe far sparire il cursore
   setTimeout(function() { simulatedClick($('#video')); }, 5000);
-  console.log("Sto per uscire da main..");
-  // Qui uso il polling perche' video.ended e' (ancora) inaffidabile
 }
 
 function openSyncableFileSystem() {

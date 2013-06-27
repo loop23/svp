@@ -1,3 +1,4 @@
+playList.prototype = Array.prototype;
 function playList() {
   // Ora prende una stringa, opzionale.
   // Se passata, torna il primo che inizia con la stringa.
@@ -19,10 +20,11 @@ function playList() {
     } else {
       tmp = this.shift();
     }
+    // Se ho trovato un item lo rimetto in fondo
     if (tmp)
       this.push(tmp);
     return tmp;
   };
 }
 
-playList.prototype = Array.prototype;
+

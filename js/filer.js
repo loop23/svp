@@ -7,10 +7,9 @@ Filer = function(filesystem, container_name, video) {
   this.filesystem = filesystem;
   this.video = video;
   this.schedule = new playList();
+  this.downloader = new Downloader(filesystem, this);
   // proviamo con un array. Questo contiene la mia idea del filesystem
   this.all_files = [];
-  // Questo serve per evitare di scaricare lo stesso file piu' volte in parallelo
-  this._download_list = [];
 
   // this.setupFiles();
   // Se invocata senza parametri assume dei default ragionevoli
@@ -37,6 +36,7 @@ Filer = function(filesystem, container_name, video) {
   container.appendChild(rootNode);
 
   this.reload();
+  this.reloadPlaylist();
   this.initial_cb = setInterval(function() {
     if (this.video.hasEnded()) {
       // console.log("video.hasEnded ha tornato true, carico prossimo");
@@ -47,7 +47,7 @@ Filer = function(filesystem, container_name, video) {
   // Ogni minuto provo a ricaricare la playlist
   setInterval(function() {
     filer.reloadPlaylist();
-  }, 1000 * 10);
+  }, 1000 * 60);
 
   console.log("filer initialized");
 };
@@ -60,7 +60,7 @@ Filer.prototype.reload = function() {
 
 Filer.prototype.getNext = function() {
   var tmp = this.schedule.circulate();
-  console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
+  // console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
   switch (tmp) {
     case 'video':
       return this.playList.circulate('cc_ugc');
@@ -104,6 +104,8 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
 Filer.prototype.addFile = function(fileEntry) {
   console.log("file.AddFile Processing entry: %o", fileEntry.name);
   if (fileEntry.isFile) {
+    if (fileEntry.name.match(/\.tmp$/))
+      return;
     this.all_files.push(fileEntry.name);
     if (fileEntry.name === 'schedule') {
       this.loadSchedule(fileEntry);
@@ -174,10 +176,7 @@ Filer.prototype.loadSchedule = function(fileEntry) {
 
 // Controlla se un file mi e' noto in _local_files.
 Filer.prototype.fileExistsLocally = function(filename) {
-  if (this.all_files.indexOf(filename) >= 0)
-    return true;
-  else
-    return false;
+  return this.all_files.include(filename);
 };
 
 // Parsa una serie di linee separate da nl
@@ -185,6 +184,7 @@ Filer.prototype.parsePlaylist = function(playlist_as_text) {
   // console.log("I (%o) have this playlist text:\n%o",
   // 	      this.toString(),
   // 	      playlist_as_text);
+  console.log("Ma chi monocazzo sei qui dentro this? %o", this);
   var my_filer = this;
   // Copio i files che ho adesso
   var old_files = this.all_files.slice(0) || [];
@@ -198,118 +198,22 @@ Filer.prototype.parsePlaylist = function(playlist_as_text) {
       var filename = md[1];
       var timestamp = md[2];
       this_pl_files.push(filename);
-      if ((!my_filer.fileExistsLocally(filename)) &&
-	  (my_filer._download_list.indexOf(filename) == -1)) {
-	my_filer.downloadFile(url, filename);
+      if (!my_filer.fileExistsLocally(filename)) {
+	this.downloader.downloadFile(url, filename);
       }
     } else {
       // console.log("Linea non parsabile: %o", line);
     }
-  });
+  }.bind(this));
   // Bene, a questo punto dovrei poter cancellare i files che non ho piu'
-  var maybe_delete = arr_diff(old_files, this_pl_files);
-  if (maybe_delete.indexOf('playlist') > -1) {
-    maybe_delete.splice(maybe_delete.indexOf('playlist'), 1);
-  }
+  var maybe_delete = old_files.difference(this_pl_files);
+  maybe_delete.delete('playlist');
   if (maybe_delete.length > 0) {
     console.log("Mi accingo a cancellare: %o - e' stato rimosso dalla playlist", maybe_delete);
     maybe_delete.forEach(function(filename) {
       my_filer.deleteFile(filename);
     });
   }
-};
-
-// Dovrebbe essere spostata in un modulo a se', per gestire i partial get per
-// i file grossi.
-Filer.prototype.downloadFile = function(url, filename) {
-  console.log("Richiesto download di %o su filename: %o", url, filename);
-  // Make request for fixed file
-  var oReq = new XMLHttpRequest;
-  oReq.open("GET", url, true);
-  oReq.responseType = "blob";
-  // Counter per stamparne solo alcune
-  var count = 0;
-  oReq.onprogress = function(p) {
-    if (p.lengthComputable) {
-      if (count % 250 == 0) {
-        var pct = (p.loaded / p.total * 100).toFixed(2);
-        console.log("Downloading %o, %o% done", url, pct);
-      }
-      count += 1;
-    }
-  };
-  // Funzione che scrive il blob quando abbiamo la risposta (ed e' un 200)
-  oReq.onload = function(oEvent) {
-    if (oEvent.target.status == 200) {
-      console.log("Request for %o succeded, saving file!", url);
-      this.saveResponseToFile(oReq.response, filename);
-    } else {
-      console.log("Request for %o failed: %o", url, oEvent.target.status);
-    }
-  }.bind(this);
-  oReq.onloadstart = function() {
-    this._download_list.push(filename);
-  }.bind(this);
-  oReq.onloadend = function() {
-    var pos = this._download_list.indexOf(filename);
-    if (pos > -1)
-      this._download_list.splice(pos, 1);
-    else
-      console.log("Il file %o non mi risultava fra quelli che stavo scaricando.. strano!", filename);
-  }.bind(this);
-  if (this._download_list.indexOf(filename) == -1) // ottimo non e' nella lista
-    oReq.send();
-  else
-    console.log("Download di file %o rifiutato, lo sto gia' scaricando",
-		filename);
-};
-
-Filer.prototype.saveResponseToFile = function(response, filename) {
-  console.log("in saveResponseToFile, saving %o bytes to file: %o",
-	      response.size,
-	      filename);
-  // Proviamo .. 1M?
-  var chunksize = 1024 * 1024;
-  var my_filer = this;
-  this.filesystem.root.getFile(filename,
-			       { create: true },
-			       function(fileEntry) {
-    // Create a FileWriter object for our FileEntry
-    fileEntry.createWriter(function(fileWriter) {
-      var chunk = 0;
-      var slstart = chunk * chunksize;
-      var slend = Math.min((chunk + 1) * chunksize, response.size);
-      var tmpBlob = response.slice(slstart,
-                                   slend,
-                                   response.type);
-      fileWriter.write(tmpBlob);
-      fileWriter.onwriteend = function(e) {
-	if (tmpBlob.size < chunksize) {
-	  try {
-  	    console.log("Ultimato salvataggio di %o", filename);
-	    my_filer.addFileByName(filename);
-	  } catch (x) {
-	    console.log("Exception adding file %o: %o", filename, x);
-	  }
-	} else {
-	  try {
-	    chunk++;
-	    slstart = chunk * chunksize;
-	    slend = Math.min((chunk + 1) * chunksize, response.size);
-            // fileWriter.seek(slstart);
-	    tmpBlob = response.slice(slstart,
-                                     slend,
-                                     response.type);
-            fileWriter.write(tmpBlob);
-	  } catch (x) {
-	    console.log("Exception calculating and slicing for upload of file %o: %o",
-			filename,
-			x);
-	  }
-	}
-      };
-    }, error);
-  }, error);
 };
 
 // Legge la playlist locale e invoca il suo parser
@@ -332,11 +236,10 @@ Filer.prototype.readPlaylist = function() {
 // Cancella la playlist (se c'e') e due secondi dopo la ricarica
 Filer.prototype.reloadPlaylist = function() {
   this.deleteFile('playlist');
-  var my_filer = this;
   setTimeout(function() {
-    my_filer.downloadFile('http://madre-dam.atcloud.it/playlists/1.txt',
-			  'playlist');
-  }, 60 * 1000);
+    this.downloader.downloadFile('http://madre-dam.atcloud.it/playlists/1.txt',
+				 'playlist');
+  }.bind(this), 5000);
 };
 
 // Chiaramente, elimina un file; Se ha successo lo elimina da all_files e dalla playList
@@ -347,14 +250,8 @@ Filer.prototype.deleteFile = function(filename) {
 			      { create: false },
 			      function(fileEntry) {
     fileEntry.remove(function() {
-      var i = my_filer.all_files.indexOf(filename);
-      if (i >= 0) {
-	my_filer.all_files.splice(i, 1);
-      }
-      i = my_filer.playList.indexOf(filename);
-      if (i >= 0) {
-	 my_filer.playList.splice(i, 1);
-      }
+      my_filer.all_files.delete(filename);
+      my_filer.playList.delete(filename);
       console.log("Rimosso " + filename);
     });
   });
