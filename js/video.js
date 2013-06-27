@@ -2,6 +2,7 @@ Video = function(filesystem, container, filer) {
   this.filesystem = filesystem;
   this.filer = filer;
   this.container = $(container);
+
 };
 
 Video.prototype.open = function(path) {
@@ -15,7 +16,7 @@ Video.prototype.open = function(path) {
 Video.prototype.load = function(entry) {
   // console.log('Opening (in Video), fullpath: %o, toUrl: %o', entry.fullPath, entry.toURL());
   // entry.file(function (file) { console.log("Chi e' costui? %o", file); });
-  this.setCurrentPath(entry.fullPath);
+  // this.setCurrentPath(entry.fullPath);
   var vd = $('video');
   var my_filer = this.filer;
   vd.src = entry.toURL();
@@ -52,7 +53,7 @@ Video.prototype.hasEnded = function() {
       return true;
     }
     if (v.currentTime == v.duration) {
-      // console.log("Playback terminato");
+      console.log("Playback terminato");
       return true;
     }
     if (v.currentTime == 0) {
@@ -66,21 +67,9 @@ Video.prototype.hasEnded = function() {
       filer.deleteFile(v.currentSrc);
       return true;
     }
-    // if (v.title === '') {
-    //   console.log("Video senza title, diciamo che non sta playando");
-    //   return true;
-    // }
     return false;
   } catch (x) {
     console.log("Errore calcolando hasEnded, diciamo di no: %o, currentSrc:", v.currentSrc);
     return false;
   }
-};
-
-Video.prototype.getCurrentPath = function() {
-  return $('#editor-path').innerText;
-};
-
-Video.prototype.setCurrentPath = function(path) {
-  $('#editor-path').innerText = path;
 };

@@ -44,6 +44,14 @@ Filer = function(filesystem, container_name, video) {
     }
   }, 1000);
 
+  this.clear_initial_cb = function() {
+    if (this.initial_cb == null)
+      return;
+    console.log("Tolgo la callback iniziale perche' mi e' arrivato evento da video");
+    window.clearInterval(this.initial_cb);
+    this.initial_cb = null;
+  };
+
   // Ogni minuto provo a ricaricare la playlist
   setInterval(function() {
     filer.reloadPlaylist();
@@ -93,7 +101,13 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
     return;
   }
   for (var i = 0; i < entries.length; ++i) {
-    this.addFile(entries[i]);
+    if (entries[i].name.match(/\.tmp$/)) {
+      entries[i].remove(function() {
+	console.log("Eliminato %o", entries[i].name);
+      });
+    } else {
+      this.addFile(entries[i]);
+    }
   }
   // Continue reading.
   reader.readEntries(this.didReadEntries.bind(this, dir, reader), error);
@@ -184,25 +198,25 @@ Filer.prototype.parsePlaylist = function(playlist_as_text) {
   // console.log("I (%o) have this playlist text:\n%o",
   // 	      this.toString(),
   // 	      playlist_as_text);
-  console.log("Ma chi monocazzo sei qui dentro this? %o", this);
   var my_filer = this;
   // Copio i files che ho adesso
   var old_files = this.all_files.slice(0) || [];
   var this_pl_files = [];
   //console.log("Prima di parsare la playlist, vecchia lista di files sul mio fs: %o",
   //            old_files);
-  playlist_as_text.split("\n").forEach(function(line) {
+  playlist_as_text.split("\n").reverse().forEach(function(line) {
     var md = line.match(/.+\/(.+)\?(\d+)$/);
     if (md) {
       var url = md[0];
       var filename = md[1];
       var timestamp = md[2];
-      this_pl_files.push(filename);
-      if (!my_filer.fileExistsLocally(filename)) {
-	this.downloader.downloadFile(url, filename);
+      this_pl_files.unshift(filename);
+      if (!this.fileExistsLocally(filename)) {
+        this.downloader.downloadFile(url, filename);
       }
     } else {
-      // console.log("Linea non parsabile: %o", line);
+      if (line != '')
+        console.log("Linea non parsabile: %o", line);
     }
   }.bind(this));
   // Bene, a questo punto dovrei poter cancellare i files che non ho piu'
