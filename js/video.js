@@ -18,8 +18,10 @@ Video = function(filesystem, container, filer) {
   //   console.log("[Video - v.abort %o, reason: %o");
   // });
   v.addEventListener('error', function(e) {
-    console.log("[Video - v.error %o, reason: %o", e, failed(e));
-  });
+    console.log("[Video] - Errore playback per %o, reason %o", v.currentSrc, failed(e));
+    this.filer.deleteFile(v.currentSrc);
+    this.loadNext();
+  }.bind(this));
   // v.addEventListener('emptied', function(e) {
   //   console.log("[Video - v.emptied %o", e);
   // });
@@ -94,13 +96,6 @@ Video.prototype.hasEnded = function() {
     }
     if (v.currentTime == v.duration) {
       // console.log("[Video - Playback terminato");
-      return true;
-    }
-    if (v.error) {
-      console.log("[Video - Playback error %o for video %o",
-		  v.error.toString(),
-		  v.currentSrc);
-      filer.deleteFile(v.currentSrc);
       return true;
     }
     return false;

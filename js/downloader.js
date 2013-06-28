@@ -23,9 +23,15 @@ Downloader = function(filesystem, filer) {
   }
 
   this.canDownload = function(filename) {
-    // if (this.downloads_in_progress.length > 4)
-    //   return false;
-    return (!this.isDownloading(filename));
+    if (this.downloads_in_progress.length > 6) {
+      console.log("Non lo scarico adesso, ho piu' di 6 dl in progress");
+      return  false;
+    }
+    if (this.isDownloading(filename)) {
+      console.log("Non lo scarico, e' gia' in coda");
+      return false
+    }
+    return true;
   }
 
   // Takes a (serviced) XMLHttpRequest and returns hash with content range info.
@@ -83,8 +89,7 @@ Downloader.prototype.downloadFile = function(url, filename, chunk) {
   if ((chunk > 0) || this.canDownload(filename)) {
     console.log("...Ok scarico %o", filename);
   } else {
-    console.log("...Rifiutato download di %o, gia' lo sto scaricando", filename);
-    return
+    return;
   }
   var oReq = new XMLHttpRequest;
   oReq.open("GET", url, true);
@@ -117,9 +122,7 @@ Downloader.prototype.downloadFile = function(url, filename, chunk) {
       } else if (this.isReqMiddleChunk(oReq)) {
         this.savePartialResponseToFile(oReq.response, filename, url, chunk);
       } else { // Segna che e' finito
-	// console.log("Sto per mandare finishPartialResponse per %o, parsed: %o",
-	// 	    filename,
-	// 	    this.parseReqChunks(oReq))
+	console.log("Looks finished, parsed req %o", this.parseReqChunks(oReq));
         this.finishPartialResponseToFile(oReq.response, filename);
       }
     } else {
@@ -149,6 +152,7 @@ Downloader.prototype.savePartialResponseToFile = function(response, filename, ur
 			       function(fileEntry) {
     // Create a FileWriter object for our FileEntry
     fileEntry.createWriter(function(fileWriter) {
+      fileWriter.seek(fileWriter.length);
       fileWriter.write(response);
       fileWriter.onwriteend = function(e) {
 	this.downloadFile(url, filename, chunk + 1);
@@ -186,7 +190,7 @@ Downloader.prototype.finishPartialResponseToFile = function(response, filename) 
     // Create a FileWriter object for our FileEntry
     // console.log("Ok aperto file %o", ftemp);
     fileEntry.createWriter(function(fileWriter) {
-      // console.log("Ok creato writer per %o", ftemp);
+      fileWriter.seek(fileWriter.length);
       fileWriter.write(response);
       fileWriter.onwriteend = function(e) {
 	  this.filesystem.root.getFile(ftemp, { create: false }, function(fileEntry) {
