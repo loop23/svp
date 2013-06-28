@@ -75,7 +75,7 @@ Filer.prototype.reload = function() {
 
 Filer.prototype.getNext = function() {
   var tmp = this.schedule.circulate();
-  console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
+  // console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
   switch (tmp) {
     case 'video':
       return this.playList.circulate('cc_ugc');
@@ -265,6 +265,16 @@ Filer.prototype.reloadPlaylist = function() {
 				 'playlist');
   }.bind(this), 5000);
 };
+
+// Cancella la playlist (se c'e') e due secondi dopo la ricarica
+Filer.prototype.reloadSchedule = function() {
+  this.deleteFile('schedule');
+  setTimeout(function() {
+    this.downloader.downloadFile('http://madre-dam.atcloud.it/schedule',
+				 'schedule');
+  }.bind(this), 5000);
+};
+
 
 // Chiaramente, elimina un file; Se ha successo lo elimina da all_files e dalla playList
 Filer.prototype.deleteFile = function(filename) {

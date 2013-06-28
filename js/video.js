@@ -55,9 +55,9 @@ Video = function(filesystem, container, filer) {
   // v.addEventListener('play', function(e) {
   //   console.log("[Video - v.play. %o", e);
   // });
-  v.addEventListener('ended', function(e) {
-    console.log("[Video - v.ended. %o", e);
-    // this.loadNext();
+  // v.addEventListener('ended', function(e) {
+  //   console.log("[Video - v.ended. %o", e);
+  //   // this.loadNext();
   }.bind(this));
 };
 
@@ -69,7 +69,7 @@ Video.prototype.open = function(path) {
 };
 
 Video.prototype.loadVideo = function(entry) {
-  console.log("Chiamata loadVideo con file %o", entry.name);
+  // console.log("Chiamata loadVideo con file %o", entry.name);
   var vd = $('#video');
   var my_filer = this.filer;
   vd.src = entry.toURL();
