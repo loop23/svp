@@ -1,117 +1,82 @@
-function failed(e) {
-   // video playback failed - show a message saying why
-   if (!e.target.error) {
-       console.log("Nessun errore");
-       return;
-   }
-   switch (e.target.error.code) {
-     case e.target.error.MEDIA_ERR_ABORTED:
-       alert('You aborted the video playback.');
-       break;
-     case e.target.error.MEDIA_ERR_NETWORK:
-       alert('A network error caused the video download to fail part-way.');
-       break;
-     case e.target.error.MEDIA_ERR_DECODE:
-       alert('The video playback was aborted due to a corruption problem or because the video used features your browser did not support.');
-       break;
-     case e.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-       alert('The video could not be loaded, either because the server or network failed or because the format is not supported.');
-       break;
-     default:
-       alert('An unknown error occurred.');
-       break;
-   }
- }
-
+// Controller dei video.
 Video = function(filesystem, container, filer) {
   this.filesystem = filesystem;
   this.filer = filer;
   this.container = $(container);
   var v = this.container;
-  v.onloadstart = function(e) {
-    console.log("v.loadstart %o", e);
-  }
-  v.onprogress = function(e) {
-    console.log("v.progress %o", e);
-  }
-  v.onsuspend = function(e) {
-    console.log("v.suspend %o", e);
-  }
-  v.onabort = function(e) {
-    console.log("v.abort %o, reason: %o", e, failed(e));
-  }
-  v.onerror = function(e) {
-    console.log("v.error %o, reason: %o", e, failed(e));
-  }
-  v.onemptied = function(e) {
-    console.log("v.emptied %o", e);
-  }
-  v.onstalled = function(e) {
-    console.log("v.stalled %o", e);
-  }
-  v.onloadedmetadata = function(e) {
-    console.log("v.loadedmetadata %o", e);
-  }
-  v.onloadeddata = function(e) {
-    console.log("v.loadeddata %o", e);
-  }
-  v.oncanplay = function(e) {
-    console.log("v.canplay %o", e);
-  }
-  v.oncanplaythrough = function(e) {
-    console.log("v.canplaythrough %o", e);
-  }
-  v.onplaying = function(e) {
-    console.log("v.playing %o", e);
-  }
-  v.onwaiting = function(e) {
-    console.log("v.waiting %o", e);
-  }
-  v.onseeking = function(e) {
-    console.log("v.seeking %o", e);
-  }
-  v.onseeked = function(e) {
-    console.log("v.seeked %o", e);
-  }
-  v.onended = function(e) {
-    console.log("v.ended %o", e);
-  }
-  v.onplay = function(e) {
-    console.log("v.play. %o", e);
-  }
+
+  // v.addEventListener('loadstart', function(e) {
+  //   console.log("[Video - v.loadstart %o", e);
+  // });
+  // v.addEventListener('progress', function(e) {
+  //   console.log("[Video - v.progress %o", e);
+  // })
+  // v.addEventListener('suspend', function(e) {
+  //   console.log("[Video - v.suspend %o", e);
+  // });
+  // v.addEventListener('abort', function(e) {
+  //   console.log("[Video - v.abort %o, reason: %o");
+  // });
+  v.addEventListener('error', function(e) {
+    console.log("[Video - v.error %o, reason: %o", e, failed(e));
+  });
+  // v.addEventListener('emptied', function(e) {
+  //   console.log("[Video - v.emptied %o", e);
+  // });
+  // v.addEventListener('stalled', function(e) {
+  //   console.log("[Video - v.stalled %o", e);
+  // });
+  // v.addEventListener('loadedmetadata', function(e) {
+  //   console.log("[Video - v.loadedmetadata %o", e);
+  // });
+  // v.addEventListener('loadeddata', function(e) {
+  //   console.log("[Video - v.loadeddata %o", e);
+  // });
+  // v.addEventListener('canplay', function(e) {
+  //   console.log("[Video - v.canplay %o", e);
+  // });
+  // v.addEventListener('canplaythrough', function(e) {
+  //   console.log("[Video - v.canplaythrough %o", e);
+  // });
+  // v.addEventListener('playing', function(e) {
+  //   console.log("[Video - v.playing %o", e);
+  // });
+  // v.addEventListener('waiting', function(e) {
+  //   console.log("[Video - v.waiting %o", e);
+  // });
+  // v.addEventListener('seeking', function(e) {
+  //   console.log("[Video - v.seeking %o", e);
+  // });
+  // v.addEventListener('seeked', function(e) {
+  //   console.log("[Video - v.seeked %o", e);
+  // });
+  // v.addEventListener('play', function(e) {
+  //   console.log("[Video - v.play. %o", e);
+  // });
+  v.addEventListener('ended', function(e) {
+    console.log("[Video - v.ended. %o", e);
+    // this.loadNext();
+  }.bind(this));
 };
 
 Video.prototype.open = function(path) {
-  this.filesystem.root.getFile(
-    path,
-    {},
-    this.load.bind(this),
-    error.bind(null, "getFile " + path));
+  this.filesystem.root.getFile(path,
+			       {},
+			       this.loadVideo.bind(this),
+			       error.bind(null, "getFile " + path));
 };
 
-Video.prototype.load = function(entry) {
-  // console.log('Opening (in Video), fullpath: %o, toUrl: %o', entry.fullPath, entry.toURL());
-  // entry.file(function (file) { console.log("Chi e' costui? %o", file); });
-  // this.setCurrentPath(entry.fullPath);
+Video.prototype.loadVideo = function(entry) {
+  console.log("Chiamata loadVideo con file %o", entry.name);
   var vd = $('#video');
   var my_filer = this.filer;
   vd.src = entry.toURL();
   vd.removeAttribute('controls');
-  // Maledetto, se glielo setto subito non lo prende, e manco con la cb.
-  // Una volta pero' se l'era presa e aumentava ogni volta!
-  // setTimeout(function() {
-  //   if (!vd.endedCallbackSet) {
-  //     console.log("Setting callback once");
-  //     // This event is supposed to work from 28.x and some.
-  //     // For the time being better off leaving it commented!
-  //     vd.addEventListener('ended', function(v) {
-  // 	console.log("Triggered ended di video %o", v);
-  // 	my_filer.getNext();
-  //     });
-  //     vd.endedCallbackSet = true;
-  //     // clearTimeout(my_filer.initial_cb);
-  //   }
-  // } , 1000);
+  vd.pause();
+  setTimeout(function() {
+    vd.play();
+    this.pausing = false;
+  }.bind(this), 2000)
 };
 
 Video.prototype.loadNext = function() {
@@ -124,19 +89,15 @@ Video.prototype.hasEnded = function() {
   var v = $('#video');
   try {
     if (v.ended) {
-      console.log("Il video e' finito, lo dice lui stesso!");
+      // console.log("[Video - Il video e' finito, lo dice lui stesso!");
       return true;
     }
     if (v.currentTime == v.duration) {
-      console.log("Playback terminato");
+      // console.log("[Video - Playback terminato");
       return true;
     }
-    if (v.currentTime == 0) {
-	console.log("Ancora non started? riproviamoci!");
-	return true;
-    }
     if (v.error) {
-      console.log("Playback error %o for video %o",
+      console.log("[Video - Playback error %o for video %o",
 		  v.error.toString(),
 		  v.currentSrc);
       filer.deleteFile(v.currentSrc);
@@ -144,7 +105,45 @@ Video.prototype.hasEnded = function() {
     }
     return false;
   } catch (x) {
-    console.log("Errore calcolando hasEnded, diciamo di no: %o, currentSrc:", v.currentSrc);
+    console.log("[Video - Errore calcolando hasEnded, diciamo di no: %o, currentSrc:", v.currentSrc);
     return false;
   }
 };
+
+// Solo dopo lo start iniziale, setto le callback
+// mie per continuare a playare
+Video.prototype.setupCallbacks = function() {
+  console.log("[Video - setup della callback veloce]");
+  var _me = this;
+  this.pausing = false;
+  // Questa viene eseguita spesso, controlla se il video e' finito
+  setInterval(function() {
+    // console.log("Dentro cb veloce, pausing? %o", _me.pausing);
+    if (_me.pausing)
+      return;
+    // console.log("[Video - Vediamo se e' finito, me: %o", _me);
+    if (_me.hasEnded()) {
+      _me.pausing = true;
+      _me.loadNext();
+    }
+  }, 100);
+}
+
+function failed(e) {
+ // video playback failed - show a message saying why
+ if (!e.target.error) {
+   return "Nessun errore";
+ }
+ switch (e.target.error.code) {
+   case e.target.error.MEDIA_ERR_ABORTED:
+     return 'You aborted the video playback.';
+   case e.target.error.MEDIA_ERR_NETWORK:
+     return 'A network error caused the video download to fail part-way.';
+   case e.target.error.MEDIA_ERR_DECODE:
+     return 'The video playback was aborted due to a corruption problem or because the video used features your browser did not support.';
+   case e.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+     return 'The video could not be loaded, either because the server or network failed or because the format is not supported.';
+   default:
+     return 'An unknown error occurred';
+ }
+}

@@ -37,12 +37,15 @@ Filer = function(filesystem, container_name, video) {
 
   this.reload();
   this.reloadPlaylist();
-  // this.initial_cb = setInterval(function() {
-  //   if (this.video.hasEnded()) {
-  //     // console.log("video.hasEnded ha tornato true, carico prossimo");
-  //     this.video.loadNext();
-  //   }
-  // }, 5000);
+  this.initial_cb = setInterval(function() {
+    console.log("Posso iniziare a playare?");
+    if (this.playList.length > 0) { // Can play
+      console.log("Si! daje!");
+      this.video.loadNext();
+      this.clear_initial_cb();
+      this.video.setupCallbacks();
+    }
+  }.bind(this), 1000 * 5);
 
   this.clear_initial_cb = function() {
     console.log("Mi e' arrivato clear_initial_cb da video");
@@ -57,9 +60,9 @@ Filer = function(filesystem, container_name, video) {
   };
 
   // Ogni minuto provo a ricaricare la playlist
-  // setInterval(function() {
-  //   filer.reloadPlaylist();
-  // }, 1000 * 60);
+  setInterval(function() {
+    filer.reloadPlaylist();
+  }, 1000 * 60);
 
   console.log("filer initialized");
 };
