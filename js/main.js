@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
   openSyncableFileSystem();
-//  registerKeyHandler();
+  registerKeyHandler();
 });
 
 // Invocata quando il sistema torna il fs, inizializza la app.
@@ -27,8 +27,6 @@ function openSyncableFileSystem() {
 				 error);
 }
 
-// function registerKeyHandler() {
-//   $('#body').addEventListener('keypress', function(e) {
-//     console.log("Pressed something, %o", e);
-//   });
-// }
+function registerKeyHandler() {
+  $('#body').addEventListener('keypress', keyHandler);
+}

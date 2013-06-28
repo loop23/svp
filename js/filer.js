@@ -6,7 +6,7 @@
 Filer = function(filesystem, container_name, video) {
   this.filesystem = filesystem;
   this.video = video;
-  this.schedule = new playList();
+  this.schedule = [];
   this.downloader = new Downloader(filesystem, this);
   // proviamo con un array. Questo contiene la mia idea del filesystem
   this.all_files = [];
@@ -15,7 +15,7 @@ Filer = function(filesystem, container_name, video) {
   // Se invocata senza parametri assume dei default ragionevoli
   this.loadSchedule();
   // Adesso c'e' un unica playlist; contiene i prossimi files che devo visualizzare.
-  this.playList = new playList();
+  this.playList = [];
 
   // Directory path => ul node mapping.
   var nodes = {};
@@ -64,12 +64,17 @@ Filer = function(filesystem, container_name, video) {
     filer.reloadPlaylist();
   }, 1000 * 60);
 
+  // Ogni ora circa provo a ricaricare la schedule
+  setInterval(function() {
+    filer.reloadSchedule();
+  }, (1000 * 60 * 60));
+
   console.log("filer initialized");
 };
 
 // Che piu' che altro e' un inizializzatore.
 Filer.prototype.reload = function() {
-  this.playList = new playList();
+  this.playList = [];
   this.list(this.filesystem.root);
 };
 
@@ -163,29 +168,23 @@ Filer.prototype.addFileByName = function(filename) {
 // again loads a reasonable default
 Filer.prototype.loadSchedule = function(fileEntry) {
   if (!fileEntry) {
-    this.schedule = new playList();
-    this.schedule.push('spot', 'video', 'video', 'video', 'video', 'altri', 'video', 'video', 'video', 'video');
+    this.schedule = ['spot', 'video', 'video', 'video', 'video', 'altri', 'video', 'video', 'video', 'video'];
+    return;
   } else {
-    this.schedule = new playList();
-    // Var to clojure over
-    var tmp = this.schedule;
+    var tmp = this // per passarla dentro
     fileEntry.file(function(file) {
       var reader = new FileReader();
       reader.onloadend = function(e) {
-	console.log("Finito di leggere la schedule, testo: %o", this.result);
-	var items = this.result.match(/[a-z,]+/)[0].split(',');
-	console.log("items: %o", items);
-	for (i in items) {
-	  tmp.push(items[i]);
-	}
+	var tmpres = this.result.match(/[a-z,]+/)[0].split(',');
 	// Se non ho letto niente di valido pero' lo resetto al mio default
-	if (tmp.length == 0)
-	  tmp.push('spot', 'video', 'video', 'video', 'video', 'altri', 'video', 'video', 'video', 'video');
+	if (tmpres.length == 0) {
+	  tmpres = ['spot', 'video', 'video', 'video', 'video', 'altri', 'video', 'video', 'video', 'video'];
+	};
+	tmp.schedule = tmpres;
       };
       reader.readAsText(file);
     }, error);
   }
-  console.log("Alla fine la schedule e': %o", this.schedule);
 };
 
 // Filer.prototype.formatSize = function(size) {
@@ -232,6 +231,7 @@ Filer.prototype.parsePlaylist = function(playlist_as_text) {
   // Bene, a questo punto dovrei poter cancellare i files che non ho piu'
   var maybe_delete = old_files.difference(this_pl_files);
   maybe_delete.delete('playlist');
+  maybe_delete.delete('schedule');
   if (maybe_delete.length > 0) {
     console.log("Mi accingo a cancellare: %o - e' stato rimosso dalla playlist", maybe_delete);
     maybe_delete.forEach(function(filename) {
@@ -257,7 +257,7 @@ Filer.prototype.readPlaylist = function() {
   }, error);
 };
 
-// Cancella la playlist (se c'e') e due secondi dopo la ricarica
+// Cancella la playlist (se c'e') e cinque secondi dopo la riscarica
 Filer.prototype.reloadPlaylist = function() {
   this.deleteFile('playlist');
   setTimeout(function() {
@@ -266,7 +266,7 @@ Filer.prototype.reloadPlaylist = function() {
   }.bind(this), 5000);
 };
 
-// Cancella la playlist (se c'e') e due secondi dopo la ricarica
+// Cancella la playlist (se c'e') e cinque secondi dopo la riscarica
 Filer.prototype.reloadSchedule = function() {
   this.deleteFile('schedule');
   setTimeout(function() {

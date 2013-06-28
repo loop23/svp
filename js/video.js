@@ -58,7 +58,7 @@ Video = function(filesystem, container, filer) {
   // v.addEventListener('ended', function(e) {
   //   console.log("[Video - v.ended. %o", e);
   //   // this.loadNext();
-  }.bind(this));
+  // }.bind(this));
 };
 
 Video.prototype.open = function(path) {

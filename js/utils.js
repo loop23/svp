@@ -183,3 +183,27 @@ Array.prototype.difference = function(a2) {
   }
   return tmp;
 };
+
+Array.prototype.circulate = function(arg) {
+  var tmp;
+  if (arg) {
+    var idx = null;
+    for (var i = 0; i < this.length; i++) {
+      if (this[i].indexOf(arg) == 0) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx) {
+      tmp = this.splice(idx,1)[0];
+    } else {
+      tmp = this.shift();
+    }
+  } else {
+    tmp = this.shift();
+  }
+  // Se ho trovato un item lo rimetto in fondo
+  if (tmp)
+    this.push(tmp);
+  return tmp;
+};
