@@ -1,8 +1,10 @@
 SyncVideoPlayer
 =============
 
-Cloud-backed video player (chrome app) using the new chrome.syncFileSystem API.
-(You need to use Chrome M27+ Canary for try this out)
+Cloud-backed video player (chrome app) originally used the new
+chrome.syncFileSystem API, but syncFileSystem was unreliable at getting
+notifications so was ditched in favor of webkitRequestFileSystem;
+This version also has strict playlist adherence.
 
 Derived from syncfs-editor, a sample at
 https://github.com/GoogleChrome/chrome-app-samples/tree/master/syncfs-editor
@@ -11,8 +13,7 @@ LICENSE:
 -
 
 Copyright 2012, 2013 {kinuko,tzik,nhiroki,calvinlo}@chromium.org
-
-Copyright 2013 loop23@gmail.com and Interact S.p.A.
+Copyright 2013 loop23@gmail.com & Interact S.p.A.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

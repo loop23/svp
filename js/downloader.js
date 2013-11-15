@@ -1,4 +1,10 @@
-/* This object downloads files, trying to be smart about it. */
+/*
+This object downloads files, trying to be smart about it.
+It is initialized with a filesystem and a filer; Uses XMLHttpRequest to
+fetch files, and does so in 16M bits; Gets 6 files concurrently at most;
+TODO: Should be made into a js worker to improve performance.
+*/
+
 Downloader = function(filesystem, filer) {
   this.filesystem = filesystem;
   this.filer = filer;

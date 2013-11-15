@@ -6,15 +6,15 @@
 Filer = function(filesystem, container_name, video) {
   this.filesystem = filesystem;
   this.video = video;
-  this.schedule = [];
   this.downloader = new Downloader(filesystem, this);
   // proviamo con un array. Questo contiene la mia idea del filesystem
   this.all_files = [];
 
   // this.setupFiles();
   // Se invocata senza parametri assume dei default ragionevoli
-  this.loadSchedule();
-  // Adesso c'e' un unica playlist; contiene i prossimi files che devo visualizzare.
+
+  // Adesso c'e' un unica playlist; contiene i prossimi files che
+  // devo visualizzare.
   this.playList = [];
 
   // Directory path => ul node mapping.
@@ -64,38 +64,21 @@ Filer = function(filesystem, container_name, video) {
     filer.reloadPlaylist();
   }, 1000 * 60);
 
-  // Ogni ora circa provo a ricaricare la schedule
-  setInterval(function() {
-    filer.reloadSchedule();
-  }, (1000 * 60 * 60));
-
   console.log("filer initialized");
 };
 
 // Che piu' che altro e' un inizializzatore.
 Filer.prototype.reload = function() {
-  this.playList = [];
-  this.list(this.filesystem.root);
+  this.playList = new playList;
+  this.listDir(this.filesystem.root);
 };
 
 Filer.prototype.getNext = function() {
-  var tmp = this.schedule.circulate();
-  // console.log("getNext invocata!, il prossimo che playo sara: %o", tmp);
-  switch (tmp) {
-    case 'video':
-      return this.playList.circulate('cc_ugc');
-    case 'spot':
-      return this.playList.circulate('cc_spot');
-    case 'altri':
-      return this.playList.circulate('cc_other');
-    default:
-      console.log("Tipo di asset sconosciuto: %o torno il primo che capita", tmp)
-      return this.playList.circulate();
-   }
+  return this.playList.getNext();
 };
 
 // List (della root); Invocata allo startup
-Filer.prototype.list = function(dir) {
+Filer.prototype.listDir = function(dir) {
   // TODO(kinuko): This should be queued up.
   console.log("Invocata list per dir %o", dir);
   var node = this.getListNode(dir.fullPath);
@@ -136,9 +119,7 @@ Filer.prototype.addFile = function(fileEntry) {
     if (fileEntry.name.match(/\.tmp$/))
       return;
     this.all_files.push(fileEntry.name);
-    if (fileEntry.name === 'schedule') {
-      this.loadSchedule(fileEntry);
-    } else if (fileEntry.name === 'playlist') {
+    if (fileEntry.name === 'playlist') {
       this.readPlaylist();
     } else if (fileEntry.name.match(/^cc_.+\.mp4$/)) { // files video
       this.playList.unshift(fileEntry.name);
@@ -163,29 +144,6 @@ Filer.prototype.addFileByName = function(filename) {
 };
 
 
-// Loads schedule. If fileEntry is provided, loads it from there,
-// otherwise loads a reasonable default. If the loaded one is empty,
-// again loads a reasonable default
-Filer.prototype.loadSchedule = function(fileEntry) {
-  if (!fileEntry) {
-    this.schedule = ['spot', 'video', 'video', 'video', 'video', 'altri', 'video', 'video', 'video', 'video'];
-    return;
-  } else {
-    var tmp = this // per passarla dentro
-    fileEntry.file(function(file) {
-      var reader = new FileReader();
-      reader.onloadend = function(e) {
-	var tmpres = this.result.match(/[a-z,]+/)[0].split(',');
-	// Se non ho letto niente di valido pero' lo resetto al mio default
-	if (tmpres.length == 0) {
-	  tmpres = ['spot', 'video', 'video', 'video', 'video', 'altri', 'video', 'video', 'video', 'video'];
-	};
-	tmp.schedule = tmpres;
-      };
-      reader.readAsText(file);
-    }, error);
-  }
-};
 
 // Filer.prototype.formatSize = function(size) {
 //   var unit = 0;
@@ -231,7 +189,6 @@ Filer.prototype.parsePlaylist = function(playlist_as_text) {
   // Bene, a questo punto dovrei poter cancellare i files che non ho piu'
   var maybe_delete = old_files.difference(this_pl_files);
   maybe_delete.delete('playlist');
-  maybe_delete.delete('schedule');
   if (maybe_delete.length > 0) {
     console.log("Mi accingo a cancellare: %o - e' stato rimosso dalla playlist", maybe_delete);
     maybe_delete.forEach(function(filename) {
@@ -265,16 +222,6 @@ Filer.prototype.reloadPlaylist = function() {
 				 'playlist');
   }.bind(this), 5000);
 };
-
-// Cancella la playlist (se c'e') e cinque secondi dopo la riscarica
-Filer.prototype.reloadSchedule = function() {
-  this.deleteFile('schedule');
-  setTimeout(function() {
-    this.downloader.downloadFile('http://madre-dam.atcloud.it/schedule',
-				 'schedule');
-  }.bind(this), 5000);
-};
-
 
 // Chiaramente, elimina un file; Se ha successo lo elimina da all_files e dalla playList
 Filer.prototype.deleteFile = function(filename) {

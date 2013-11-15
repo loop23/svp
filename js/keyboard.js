@@ -1,10 +1,10 @@
 function keyHandler(e) {
-  switch (String.fromCharCode(e.which)) {
+  var paused = $('video').paused;
+  var k = String.fromCharCode(e.which);
+  console.log("Pressed: *" + k + '*');
+  switch (k) {
     case 'q':
       showPlaylist();
-      break;
-    case 'w':
-      showSchedule();
       break;
     case 'e':
       showCurrentVideo();
@@ -14,22 +14,24 @@ function keyHandler(e) {
       skipVideo();
       break;
     case 'x':
-      loadSchedule();
+      loadPlaylist();
       break;
-
+    case ' ':
+      if (paused) {
+	$('video').play();
+      } else {
+	$('video').pause();
+      }
+      break;
   }
 };
 
 function showPlaylist() {
-  console.log("Playlist: %o", filer.playList);
-}
-
-function showSchedule() {
-  console.log("Schedule: %o", filer.schedule);
+  alertify.alert("<p>Playlist</p>" + filer.playList.asHtmlList());
 }
 
 function showCurrentVideo() {
-  console.log("Current video: %o", video.container.currentSrc);
+  alertify.alert("<p>Current video</p>" + video.container.currentSrc);
 }
 
 function skipVideo() {
@@ -37,7 +39,7 @@ function skipVideo() {
   v.currentTime = v.duration - 0.1;
 }
 
-function loadSchedule() {
-  filer.reloadSchedule();
+function loadPlaylist() {
+  alertify.alert("Unimplemented!!");
 }
 

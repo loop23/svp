@@ -177,7 +177,7 @@ Array.prototype.include = function(item) {
 // Returns a new array with all elements of a2 removed from self
 Array.prototype.difference = function(a2) {
   var tmp = this.slice(0);
-  for (var i=0;i<a2.length;i++) {
+  for (var i=0; i < a2.length; i++) {
     var v = a2[i];
     tmp.delete(v);
   }
