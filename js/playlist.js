@@ -4,7 +4,7 @@ playList = function(args) {
 
 playList.prototype = Array.prototype;
 
-// Need that do display
+// Need that to display
 playList.prototype.asHtmlList = function() {
   var out = '<ul class="playlist">';
   for (var i = 0; i < this.length; i ++) {

@@ -192,5 +192,7 @@ body {
 }
 
 .playlist {
-  font-size: 0.5em;
+  font-size: 0.7em;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }

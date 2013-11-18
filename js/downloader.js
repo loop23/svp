@@ -103,18 +103,6 @@ Downloader.prototype.downloadFile = function(url, filename, chunk) {
   var start = chunk * this.CHUNK_SIZE;
   var end = ((chunk + 1) * this.CHUNK_SIZE) - 1;
   oReq.setRequestHeader("Range", "bytes=" + start + '-' + end);
-  // Counter per stamparne solo alcune
-  // var count = 0;
-  // oReq.onprogress = function(p) {
-  //   if (p.lengthComputable) {
-  //     if (count % 250 == 0) {
-  //       var pct = (p.loaded / p.total * 100).toFixed(2);
-  //       // console.log("Downloading %o, start: %o, end: %o, %o% done", url, start, end, pct);
-  //     }
-  //     count += 1;
-  //   }
-  // };
-
   // Funzione che scrive il blob quando abbiamo la risposta (ed e' un 200)
   oReq.onload = function(oEvent) {
     if (oEvent.target.status == 200) {
@@ -140,10 +128,6 @@ Downloader.prototype.downloadFile = function(url, filename, chunk) {
     if (chunk == 0)
     this.registerDownload(filename);
   }.bind(this);
-  // oReq.onloadend = function() {
-  //   // console.log("Ricevuto onloadend per %o", filename)
-  // }.bind(this);
-  // Odio javascript per questo, pare il tedesco che mette i verbi alla fine!
   oReq.send();
 };
 

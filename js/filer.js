@@ -36,7 +36,7 @@ Filer = function(filesystem, container_name, video) {
   container.appendChild(rootNode);
 
   this.reload();
-  this.reloadPlaylist();
+  this.requestPlaylistDownload();
   this.initial_cb = setInterval(function() {
     console.log("Posso iniziare a playare?");
     if (this.playList.length > 0) { // Can play
@@ -61,7 +61,7 @@ Filer = function(filesystem, container_name, video) {
 
   // Ogni minuto provo a ricaricare la playlist
   setInterval(function() {
-    filer.reloadPlaylist();
+    filer.requestPlaylistDownload();
   }, 1000 * 60);
 
   console.log("filer initialized");
@@ -214,8 +214,8 @@ Filer.prototype.readPlaylist = function() {
   }, error);
 };
 
-// Cancella la playlist (se c'e') e cinque secondi dopo la riscarica
-Filer.prototype.reloadPlaylist = function() {
+// Cancella il file della playlist (se c'e') e cinque secondi dopo la riscarica
+Filer.prototype.requestPlaylistDownload = function() {
   this.deleteFile('playlist');
   setTimeout(function() {
     this.downloader.downloadFile('http://madre-dam.atcloud.it/playlists/1.txt',
