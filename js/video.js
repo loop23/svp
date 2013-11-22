@@ -5,74 +5,26 @@ Video = function(filesystem, container, filer) {
   this.container = $(container);
   var v = this.container;
 
-  // v.addEventListener('loadstart', function(e) {
-  //   console.log("[Video - v.loadstart %o", e);
-  // });
-  // v.addEventListener('progress', function(e) {
-  //   console.log("[Video - v.progress %o", e);
-  // })
-  // v.addEventListener('suspend', function(e) {
-  //   console.log("[Video - v.suspend %o", e);
-  // });
-  // v.addEventListener('abort', function(e) {
-  //   console.log("[Video - v.abort %o, reason: %o");
-  // });
   v.addEventListener('error', function(e) {
     console.log("[Video] - Errore playback per %o, reason %o", v.currentSrc, failed(e));
     this.filer.deleteFile(v.currentSrc);
     this.loadNext();
   }.bind(this));
-  // v.addEventListener('emptied', function(e) {
-  //   console.log("[Video - v.emptied %o", e);
-  // });
-  // v.addEventListener('stalled', function(e) {
-  //   console.log("[Video - v.stalled %o", e);
-  // });
-  // v.addEventListener('loadedmetadata', function(e) {
-  //   console.log("[Video - v.loadedmetadata %o", e);
-  // });
-  // v.addEventListener('loadeddata', function(e) {
-  //   console.log("[Video - v.loadeddata %o", e);
-  // });
-  // v.addEventListener('canplay', function(e) {
-  //   console.log("[Video - v.canplay %o", e);
-  // });
-  // v.addEventListener('canplaythrough', function(e) {
-  //   console.log("[Video - v.canplaythrough %o", e);
-  // });
-  // v.addEventListener('playing', function(e) {
-  //   console.log("[Video - v.playing %o", e);
-  // });
-  // v.addEventListener('waiting', function(e) {
-  //   console.log("[Video - v.waiting %o", e);
-  // });
-  // v.addEventListener('seeking', function(e) {
-  //   console.log("[Video - v.seeking %o", e);
-  // });
-  // v.addEventListener('seeked', function(e) {
-  //   console.log("[Video - v.seeked %o", e);
-  // });
-  // v.addEventListener('play', function(e) {
-  //   console.log("[Video - v.play. %o", e);
-  // });
-  // v.addEventListener('ended', function(e) {
-  //   console.log("[Video - v.ended. %o", e);
-  //   // this.loadNext();
-  // }.bind(this));
 };
 
-Video.prototype.open = function(path) {
-  this.filesystem.root.getFile(path,
+// Apre il file locale in path e e lo
+Video.prototype.open = function(item) {
+  console.log("[Video].open con item: %o", item);
+  this.filesystem.root.getFile(item.localFile,
 			       {},
 			       this.loadVideo.bind(this),
-			       error.bind(null, "getFile " + path));
-};
+			       error); //.bind(null, "getFile: " + item.localFile));
+}
 
 Video.prototype.loadVideo = function(entry) {
-  // console.log("Chiamata loadVideo con file %o", entry.name);
+  console.log("[Video] loadVideo con entry %o", entry);
   var vd = $('#video');
-  var my_filer = this.filer;
-  vd.src = entry.toURL();
+  vd.src = entry.name.toURL();
   vd.removeAttribute('controls');
   vd.pause();
   setTimeout(function() {
@@ -82,25 +34,24 @@ Video.prototype.loadVideo = function(entry) {
 };
 
 Video.prototype.loadNext = function() {
-  var tmp = this.filer.getNext();
-  if (tmp)
-    this.open(tmp);
+  var item = this.filer.getNext();
+  console.log("[Video] loadNext, item tornato da filer: %o", item);
+  if (item)
+    this.open(item);
 };
 
 Video.prototype.hasEnded = function() {
   var v = $('#video');
   try {
     if (v.ended) {
-      // console.log("[Video - Il video e' finito, lo dice lui stesso!");
       return true;
     }
     if (v.currentTime == v.duration) {
-      // console.log("[Video - Playback terminato");
       return true;
     }
     return false;
   } catch (x) {
-    console.log("[Video - Errore calcolando hasEnded, diciamo di no: %o, currentSrc:", v.currentSrc);
+    console.log("[Video] - Errore calcolando hasEnded, diciamo di no: %o, $('video').currentSrc: ", v.currentSrc);
     return false;
   }
 };
@@ -108,7 +59,7 @@ Video.prototype.hasEnded = function() {
 // Solo dopo lo start iniziale, setto le callback
 // mie per continuare a playare
 Video.prototype.setupCallbacks = function() {
-  console.log("[Video - setup della callback veloce]");
+  console.log("[Video] - setup della callback veloce");
   var _me = this;
   this.pausing = false;
   // Questa viene eseguita spesso, controlla se il video e' finito

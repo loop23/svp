@@ -37,12 +37,11 @@ function info(msg) {
 }
 
 function error(msg) {
-  console.log('ERROR: ', arguments);
   var message = '';
   for (var i = 0; i < arguments.length; i++) {
     var description = '';
     if (arguments[i] instanceof FileError) {
-      switch (arguments[i].code) {
+      switch (arguments[i].message) {
         case FileError.QUOTA_EXCEEDED_ERR:
           description = 'QUOTA_EXCEEDED_ERR';
           break;
@@ -59,7 +58,7 @@ function error(msg) {
           description = 'INVALID_STATE_ERR';
           break;
         default:
-          description = 'Unknown Error';
+          description = 'Unknown Error: ' + arguments[i].toString();
           break;
       }
       message += ': ' + description;
@@ -147,13 +146,7 @@ MediaError.prototype.toString = function mets() {
 };
 
 FileError.prototype.toString = function() {
-  var msg = '';
-  switch (this.code) {
-    case 9:
-      msg = 'Modifica non valida';
-      break;
-  }
-  return "FileError: " + msg;
+  return "[FileError: " + this.message + ']';
 };
 
 // Just like ruby delete
