@@ -9,18 +9,17 @@ const PLAYLIST_URL = 'http://madre-dam.atcloud.it/playlists/2.txt';
 const PLAYLIST_REFRESH_TIME = 1000 * 60;
 
 Filer = function(filesystem, container_name, video) {
+  console.log("[Filer] - initializeing w/ %o, cn: %o, video el: %o", filesystem, container_name, video);
   this.filesystem = filesystem;
   this.video = video;
   this.downloader = new Downloader(filesystem, this);
-  // proviamo con un array. Questo contiene la mia idea del filesystem
-  this.all_files = [];
 
   // this.setupFiles();
   // Se invocata senza parametri assume dei default ragionevoli
 
   // Adesso c'e' un unica playlist; contiene i prossimi files che
   // devo visualizzare.
-  this.playList = [];
+  this.playList = new playList(this);
 
   // Directory path => ul node mapping.
   var nodes = {};
@@ -105,7 +104,7 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
     if (entry.name.match(/\.tmp$/)) {
       console.log("[Filer] Provo a eliminare il tmpfile %o", entry);
       entry.remove(function() {
-	console.log("[Filer]  Eliminato %o", entry);
+	console.log("[Filer]  Eliminato %o da filesystem locale.. giusto? boh!", entry);
       });
     } else {
       this.addFile(entry);
@@ -124,7 +123,6 @@ Filer.prototype.addFile = function(fileEntry) {
   }
   if (fileEntry.name.match(/\.tmp$/)) // tmpfile
     return;
-  this.all_files.push(fileEntry.name);
   if (fileEntry.name === 'playlist') {
     this.readPlaylist();
   } else if (fileEntry.name.match(/^cc_.+\.mp4$/)) { // files video
@@ -140,7 +138,6 @@ Filer.prototype.addFile = function(fileEntry) {
 // Aggiunge un file (per nome) alla lista dei files a me noti.
 Filer.prototype.addFileByName = function(filename) {
   console.log("[Filer].addFileByName per file: %o..Io sono" + this, filename);
-  var my_filer = this;
   this.filesystem.root.getFile(filename,
 			       { create: false },
     function(fileEntry) {
@@ -158,31 +155,40 @@ Filer.prototype.addFileByName = function(filename) {
 //   return size + ' ' + ['', 'K', 'M', 'G', 'T'][unit] + 'B';
 // };
 
-// Controlla se un file mi e' noto in _local_files.
+// Controlla se un file col nome filename e' stato scaricato (chiede alla playList)
 Filer.prototype.fileExistsLocally = function(filename) {
-  return this.all_files.include(filename);
+  console.log("[Filer].fileExistsLocally per %o", filename);
+  return this.playList.hasDownloadedFile(filename);
 };
-
 
 // Legge la playlist locale e invoca il suo parser
 Filer.prototype.readPlaylist = function() {
-  console.log("[Filer] ReadPlaylist: " + this);
-  var my_filer = this;
+  console.log("[Filer] ReadPlaylist on %o", this);
   this.filesystem.root.getFile('playlist',
 			       { create: false },
 			       function(fileEntry) {
+    console.log("1... %o", this);
     fileEntry.file(function(file) {
+       console.log("2... %o, file:", this, file);
        var reader = new FileReader();
-       reader.onloadend = function(e) {
-	 var delenda = my_filer.parsePlaylist(this.result);
+       reader.onload = function(e) {
+	 var txt = e.target.result;
+	 console.log("3... this: %o, e: %o - text?: %o", this, e, txt);
+	 if (!txt) {
+	   console.log("[Filer] Strano, niente testo!");
+	   return; // Non c'e' nessun testo!
+	 }
+	 var delenda = this.playList.parsePlaylistText(txt);
 	 console.log("[Filer] Delenda: %o", delenda);
 	 delenda.forEach(function(filename) {
-	   my_filer.deleteFile(filename);
-	 });
-       };
+	   console.log("4... %o", this);
+	   this.deleteFile(filename);
+	 }.bind(this), error);
+       }.bind(this);
+       console.log("[Filer] - mi accingo a chiamare reader.readastext su file %o", file);
        reader.readAsText(file);
-    }, error);
-  }, error);
+    }.bind(this), error);
+  }.bind(this), error);
 };
 
 // Cancella il file della playlist (se c'e') e cinque secondi dopo la riscarica
@@ -194,20 +200,20 @@ Filer.prototype.requestPlaylistDownload = function() {
   }.bind(this), 5000);
 };
 
-// Chiaramente, elimina un file; Se ha successo lo elimina da all_files e dalla playList
+// Chiaramente, elimina un file; Se ha successo lo elimina dalla playList
 Filer.prototype.deleteFile = function(filename) {
-  var my_filer = this;
   console.log("[Filer].deleteFile con filename: %o", filename);
   this.filesystem.root.getFile(filename,
 			      { create: false },
 			      function(fileEntry) {
     fileEntry.remove(function() {
-      my_filer.all_files.delete(filename);
-      console.log("[Filer] Rimosso " + filename);
-    });
-  });
+      console.log("Dentro fileEntry.remove... chi cazzo e' this? %o", this);
+      var plrem = this.playList.removeItem(filename);
+      console.log("[Filer] Rimosso %o da local file, e da playlist? %b", filename, plrem);
+    }.bind(this));
+  }.bind(this));
 };
 
 Filer.prototype.toString = function() {
-  return("[Filer con " + this.all_files.length + " elementi in dir]");
+  return("[Filer con pl:" + this.playList.toString());
 };

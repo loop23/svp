@@ -7,6 +7,8 @@ Ha attributi:
 */
 
 // Constructor
+// Interessante: unica dipendenza per filer e' chiedergli se fileExistsLocally - che pero' viene delegato
+// alla playList ; forse converrebbe dipendere da playlist invece che da filer?
 playlistItem = function(filer, remoteUrl, localFile) {
   this.filer = filer;
   this.localFile = localFile;
@@ -18,7 +20,7 @@ playlistItem = function(filer, remoteUrl, localFile) {
   var md = remoteUrl.match(/.+\/(.+)\?(\d+)$/);
   if (md) {
     this.localFile = md[1];
-    this.status = filer.fileExistsLocally() ? 'DOWNLOADED' : 'PENDING';
+    this.status = filer.fileExistsLocally(this.localFile) ? 'DOWNLOADED' : 'PENDING';
   }
 }
 
@@ -47,6 +49,6 @@ playlistItem.prototype.finishDownload = function() {
 }
 
 playlistItem.prototype.toString = function() {
-  return "[PlaylistItem: " + this.localfile + ' - ' + this.status + ']';
+  return "[PlaylistItem: " + this.localFile + ' - ' + this.status + ']';
 }
 

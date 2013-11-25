@@ -12,81 +12,88 @@ Downloader = function(filesystem, filer) {
   this.filer = filer;
   // At the beginning it's none
   this.downloads_in_progress = [];
-  this.registerDownload = function(entry) {
-    console.log("[Downloader] Setting as downloading for %o", entry);
-    this.downloads_in_progress.push(entry);
-    entry.startDownload();
-  }
-  this.unregisterDownload = function(entry, status) {
-    if (!status)
-      status = 'DOWNLOADED'
-    console.log("[Downloader] Unregistering download for %o with status %s", entry, status);
-    if (! this.downloads_in_progress.delete(entry))
-      console.log("[Downloader] La entry %o non mi risultava fra quelli che stavo scaricando.. strano!",
-		  entry);
+}
+
+Downloader.prototype.registerDownload = function(entry) {
+  console.log("[Downloader] Setting as downloading for %o", entry);
+  this.downloads_in_progress.push(entry);
+  entry.startDownload();
+}
+
+Downloader.prototype.unregisterDownload = function(entry, status) {
+  if (!status)
+    status = 'DOWNLOADED'
+  console.log("[Downloader] Unregistering download for %o with status %s", entry, status);
+  if (! this.downloads_in_progress.delete(entry))
+    console.log("[Downloader] La entry %o non mi risultava in downloads_in_progress.. strano!?",
+		entry);
+  try {
     entry.finishDownload(status);
+  } catch (e) {
+    console.log("entry non aveva metodo o qualcosa di simile? %o", e);
   }
+}
 
-  this.canDownload = function(entry) {
-    if (this.downloads_in_progress.length > 6) {
-      console.log("[Downloader] Non lo scarico adesso, ho piu' di 6 dl in progress");
-      return  false;
-    }
-    if (entry.isDownloading()) {
-      console.log("[Downloader] Non lo scarico, e' gia' in coda");
-      return false
-    }
+Downloader.prototype.canDownload = function(entry) {
+  if (this.downloads_in_progress.length > 6) {
+    console.log("[Downloader] Non lo scarico adesso, ho piu' di 6 dl in progress");
+    return  false;
+  }
+  if (entry.isDownloading()) {
+    console.log("[Downloader] Non lo scarico, e' gia' in coda");
+    return false
+  }
+  return true;
+}
+
+// Takes a (serviced) XMLHttpRequest and returns hash with content range info.
+Downloader.prototype.parseReqChunks = function(req) {
+  var md = req.getResponseHeader("Content-Range").match(/(\d+)-(\d+)\/(\d+)/);
+  if (!md) {
+    return {};
+  }
+  var start = md[1];
+  var end = md[2];
+  var total = md[3];
+  return { start: parseInt(start),
+	   end: parseInt(end),
+	   total: parseInt(total) };
+};
+
+Downloader.prototype.isReqSingleChunk = function(req) {
+  var info = this.parseReqChunks(req);
+  if ((info['start'] == 0) && ((info['end'] + 1) >= info['total']))
     return true;
-  }
+  else
+    return false;
+};
 
-  // Takes a (serviced) XMLHttpRequest and returns hash with content range info.
-  this.parseReqChunks = function(req) {
-    var md = req.getResponseHeader("Content-Range").match(/(\d+)-(\d+)\/(\d+)/);
-    if (!md) {
-      return {};
-    }
-    var start = md[1];
-    var end = md[2];
-    var total = md[3];
-    return { start: parseInt(start),
-	     end: parseInt(end),
-	     total: parseInt(total) };
-  };
+Downloader.prototype.isReqFirstChunk = function(req) {
+  var info = this.parseReqChunks(req);
+  if ((info['start'] == 0) && ((info['end'] + 1) < info['total']))
+    return true;
+  else
+    return false;
+};
 
-  this.isReqSingleChunk = function(req) {
-    var info = this.parseReqChunks(req);
-    if ((info['start'] == 0) && ((info['end'] + 1) >= info['total']))
-      return true;
-    else
-      return false;
-  };
+Downloader.prototype.isReqMiddleChunk = function(req) {
+  var info = this.parseReqChunks(req);
+  if ((info['start'] > 0) && ((info['end'] + 1) < info['total']))
+    return true;
+  else
+    return false;
+};
 
-  this.isReqFirstChunk = function(req) {
-    var info = this.parseReqChunks(req);
-    if ((info['start'] == 0) && ((info['end'] + 1) < info['total']))
-      return true;
-    else
-      return false;
-  };
-
-  this.isReqMiddleChunk = function(req) {
-    var info = this.parseReqChunks(req);
-    if ((info['start'] > 0) && ((info['end'] + 1) < info['total']))
-      return true;
-    else
-      return false;
-  };
-
-  this.isReqLastChunk = function(req) {
-    var info = this.parseReqChunks(req);
-    if ((info['start'] > 0) && ((info['end'] + 1) == info['total']))
-      return true;
-    else
-      return false;
-  };
+Downloader.prototype.isReqLastChunk = function(req) {
+  var info = this.parseReqChunks(req);
+  if ((info['start'] > 0) && ((info['end'] + 1) == info['total']))
+    return true;
+  else
+    return false;
 };
 
 Downloader.prototype.downloadFile = function(url, local) {
+  console.log("[Downloader].downloadFile per url: %o su local: %o", url, local);
   var oReq = new XMLHttpRequest;
   oReq.open("GET", url, true);
   oReq.responseType = "blob";
@@ -98,6 +105,7 @@ Downloader.prototype.downloadFile = function(url, local) {
       console.log("[Downloader] Request for %s failed: %s", url, oEvent.target.status);
     }
   }.bind(this);
+  oReq.send();
 }
 
 Downloader.prototype.downloadPlaylistEntry = function(entry, chunk) {

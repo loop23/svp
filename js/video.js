@@ -13,9 +13,9 @@ Video = function(filesystem, container, filer) {
 };
 
 // Apre il file locale in path e e lo
-Video.prototype.open = function(item) {
-  console.log("[Video].open con item: %o", item);
-  this.filesystem.root.getFile(item.localFile,
+Video.prototype.open = function(entry) {
+  console.log("[Video].open con entry?: %o", entry);
+  this.filesystem.root.getFile(entry.localFile,
 			       {},
 			       this.loadVideo.bind(this),
 			       error); //.bind(null, "getFile: " + item.localFile));
@@ -24,7 +24,7 @@ Video.prototype.open = function(item) {
 Video.prototype.loadVideo = function(entry) {
   console.log("[Video] loadVideo con entry %o", entry);
   var vd = $('#video');
-  vd.src = entry.name.toURL();
+  vd.src = entry.toURL();
   vd.removeAttribute('controls');
   vd.pause();
   setTimeout(function() {

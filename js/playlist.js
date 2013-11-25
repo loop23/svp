@@ -6,7 +6,7 @@ playList = function(filer) {
 
 playList.prototype = Array.prototype;
 
-// Need that to display
+// Need that to display in nice fashion
 playList.prototype.asHtmlList = function() {
   var out = '<ul class="playlist">';
   for (var i = 0; i < this.length; i ++) {
@@ -16,16 +16,12 @@ playList.prototype.asHtmlList = function() {
   return out;
 }
 
-// playList.prototype.asString = function() {
-//   return '[Playlist con' + this + ']';
-// }
-
 // Proper pl management: getNext and getCurrent
 playList.prototype.getNext = function() {
   this.current += 1;
   if (this.current >= this.length)
     this.current = 0;
-  console.log("GetNext su %s ha indice a %i", this, this.current);
+  console.log("[Playlist] GetNext su %s ha indice a %i", this, this.current);
   return this.getCurrent();
 }
 
@@ -36,7 +32,7 @@ playList.prototype.getCurrent = function() {
 // Parsa una serie di linee separate da nl.
 // Torna array di files che possono essere cancellati
 playList.prototype.parsePlaylistText = function(text) {
-  console.log("I (%o) have this playlist text:\n%o",
+  console.log("[Playlist] I (%o) have this playlist text:\n%o",
   	      this.toString(),
   	      text);
   // Copio i files che ho adesso, in modo da poter calcolare la diff
@@ -50,13 +46,13 @@ playList.prototype.parsePlaylistText = function(text) {
       this.unshift(new playlistItem(this.filer, line));
     } else {
       if (line != '')
-        console.log("Linea non parsabile: %o", line);
+        console.log("[Playlist] Linea non parsabile: %o", line);
     }
   }.bind(this));
   // Bene, a questo punto dovrei poter cancellare i files che non ho piu'
   var maybe_delete = old_files.difference(this.filenames());
   if (maybe_delete.length > 0) {
-    console.log("parsePlayList torna %o", maybe_delete);
+    console.log("[Playlist] parsePlayList torna %o", maybe_delete);
   };
   return maybe_delete;
 };
@@ -66,8 +62,44 @@ playList.prototype.filenames = function() {
 }
 
 playList.prototype.appendItem = function(item) {
-  if (this.some(function(e) { item.localFile == e.localFile})) {
-    console.log("Tentato append di %o fallito, c'era gia'!", item);
+  if (this.some(function(e) { item.localFile === e.localFile })) {
+    console.log("[Playlist] Tentato append di %o fallito, c'era gia'!", item);
+    return false;
   }
   this.unshift(item);
+  return true;
+}
+
+// Torna true se riesce a rimuoverlo
+playList.prototype.removeItem = function(filename) {
+  for (var i = 0; i < this.length; i++) {
+    if (this[i].localFile == filename) {
+      console.log("[Playlist] Tentato splice di %s da %i", filename, i);
+      this = this.splice(i,1);
+      return true;
+    };
+  };
+  return false;
+}
+
+playList.prototype.hasDownloadedFile = function(filename) {
+  if (this.some(function(e) {
+    e.localFile === filename &&
+    e.status === 'DOWNLOADED'})) {
+    return true;
+  }
+  return false;
+}
+
+// Dice alla pl che il download in filename e' completato
+playList.prototype.finishDownload = function(filename) {
+  for (var i = 0; i < this.length; i++) {
+    if (this[i].fileName === filename) {
+      console.log("[Playlist].finishDownload ha trovato %o da settare a scaricato", this[i]);
+      this[i].finishDownload();
+      return true;
+    };
+  };
+  console.log("[Playlist].finishDownload NON HA trovato %o da settare", filename);
+  return false;
 }
