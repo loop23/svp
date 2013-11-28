@@ -32,27 +32,35 @@ playList.prototype.getCurrent = function() {
 // Parsa una serie di linee separate da nl.
 // Torna array di files che possono essere cancellati
 playList.prototype.parsePlaylistText = function(text) {
-  console.log("[Playlist] I (%o) have this playlist text:\n%o",
-  	      this.toString(),
+  console.log("[Playlist].parsePlaylistText: I (%o) have this playlist text:\n%o",
+  	      this,
   	      text);
   // Copio i files che ho adesso, in modo da poter calcolare la diff
   var old_files = this.filenames();
+  var new_entries = [];
   text.split("\n").forEach(function(line) {
     var md = line.match(/.+\/(.+)\?(\d+)$/);
     if (md) {
       var url = md[0];
       var filename = md[1];
       var timestamp = md[2];
-      this.unshift(new playlistItem(this.filer, line));
+      var new_item = new playlistItem(this.filer, line);
+      // Eh no.
+      new_items.push(new_item);
+      if (!this.filer.fileExistsLocally(filename)) {
+	filer.downloader.downloadPlaylistItem(new_item);
+      }
     } else {
       if (line != '')
         console.log("[Playlist] Linea non parsabile: %o", line);
     }
   }.bind(this));
+  // new_entries contiene gli item appena letti; Me la cavo con la splice??
+  this.splice(0, this.length, new_entries);
   // Bene, a questo punto dovrei poter cancellare i files che non ho piu'
   var maybe_delete = old_files.difference(this.filenames());
   if (maybe_delete.length > 0) {
-    console.log("[Playlist] parsePlayList torna %o", maybe_delete);
+    console.log("[Playlist]parsePlayList torna %o to delete:", maybe_delete);
   };
   return maybe_delete;
 };

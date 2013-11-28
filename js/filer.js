@@ -21,6 +21,9 @@ Filer = function(filesystem, container_name, video) {
   // devo visualizzare.
   this.playList = new playList(this);
 
+  // La mia idea dei files rimasti.
+  this.localFiles = [];
+
   // Directory path => ul node mapping.
   var nodes = {};
 
@@ -40,8 +43,11 @@ Filer = function(filesystem, container_name, video) {
   this.setListNode('/', rootNode);
   container.appendChild(rootNode);
 
-  this.reload();
+  this.playList = new playList(this);
+  this.listDir(this.filesystem.root);
+
   this.requestPlaylistDownload();
+
   this.initial_cb = setInterval(function() {
     console.log("[Filer] Posso iniziare a playare?");
     if (this.playList.length > 0) { // Can play
@@ -52,30 +58,27 @@ Filer = function(filesystem, container_name, video) {
     }
   }.bind(this), 1000 * 5);
 
-  this.clear_initial_cb = function() {
-    console.log("[Filer] Mi e' arrivato clear_initial_cb da video...");
-    if (this.initial_cb == null) {
-      console.log("[Filer] ...Ma gia' la tolsi");
-      return;
-    } else {
-      console.log("[Filer] ...La tolgo davvero");
-      window.clearInterval(this.initial_cb);
-      this.initial_cb = null;
-    }
-  };
-
   // Ogni minuto provo a ricaricare la playlist
   setInterval(function() {
     filer.requestPlaylistDownload();
   }, PLAYLIST_REFRESH_TIME);
+
+  // Done!
   console.log("[Filer] Initialized!");
 };
 
-// Che piu' che altro e' un inizializzatore.
-Filer.prototype.reload = function() {
-  this.playList = new playList(this);
-  this.listDir(this.filesystem.root);
+Filer.prototype.clear_initial_cb = function() {
+  console.log("[Filer].clear_initial_cb");
+  if (this.initial_cb == null) {
+    console.log("[Filer] ...Ma gia' la tolsi");
+    return;
+  } else {
+    console.log("[Filer] ...La tolgo davvero");
+    window.clearInterval(this.initial_cb);
+    this.initial_cb = null;
+  }
 };
+
 
 Filer.prototype.getNext = function() {
   return this.playList.getNext();
@@ -93,6 +96,7 @@ Filer.prototype.listDir = function(dir) {
 };
 
 // Invocata quando si e' finito di leggere le entries (ls)
+// Dovrebbe capitare solo allo startup?
 Filer.prototype.didReadEntries = function(dir, reader, entries) {
   var node = this.getListNode(dir.fullPath);
   if (!entries.length) {
@@ -125,10 +129,11 @@ Filer.prototype.addFile = function(fileEntry) {
     return;
   if (fileEntry.name === 'playlist') {
     this.readPlaylist();
-  } else if (fileEntry.name.match(/^cc_.+\.mp4$/)) { // files video
+  } else if (fileEntry.name.match(/\.mp4$/)) { // files video
     var new_item = new playlistItem(this, null, fileEntry.name);
-    console.log("Appendo %o a playlist", new_item);
+    console.log("[Filer] Appendo nuova entry: %o alla playlist", new_item);
     this.playList.appendItem(new_item);
+    this.localFiles.push(fileEntry.name)
   } else {
     console.log("[Filer] Aggiunto file inutile (che non verra' playato perche' non corrisponde a nulla che io conosca): %o",
 		fileEntry.name);
@@ -157,8 +162,9 @@ Filer.prototype.addFileByName = function(filename) {
 
 // Controlla se un file col nome filename e' stato scaricato (chiede alla playList)
 Filer.prototype.fileExistsLocally = function(filename) {
-  console.log("[Filer].fileExistsLocally per %o", filename);
-  return this.playList.hasDownloadedFile(filename);
+  var do_you = this.localFiles.some(function(e) { return e == filename });
+  console.log("[Filer].fileExistsLocally per %o torna: %o", filename, do_you);
+  return do_you;
 };
 
 // Legge la playlist locale e invoca il suo parser
@@ -207,9 +213,10 @@ Filer.prototype.deleteFile = function(filename) {
 			      { create: false },
 			      function(fileEntry) {
     fileEntry.remove(function() {
-      console.log("Dentro fileEntry.remove... chi cazzo e' this? %o", this);
+      console.log("[File].deleteFile, dentro fileEntry.remove... chi e' this? %o", this);
       var plrem = this.playList.removeItem(filename);
-      console.log("[Filer] Rimosso %o da local file, e da playlist? %b", filename, plrem);
+      this.localFiles = this.localFiles.filter(function(e) { return e != filename });
+      console.log("[Filer] Rimosso %o da local file, e da playlist? %o", filename, plrem);
     }.bind(this));
   }.bind(this));
 };

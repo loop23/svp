@@ -10,43 +10,47 @@ const CHUNK_SIZE = 1024 * 1024 * 16; // 16M
 Downloader = function(filesystem, filer) {
   this.filesystem = filesystem;
   this.filer = filer;
-  // At the beginning it's none
+  // At the beginning it's empty
   this.downloads_in_progress = [];
 }
 
-Downloader.prototype.registerDownload = function(entry) {
-  console.log("[Downloader] Setting as downloading for %o", entry);
-  this.downloads_in_progress.push(entry);
-  entry.startDownload();
+// Dice a me stesso e alla entry che e' in download
+Downloader.prototype.registerDownload = function(item) {
+  console.log("[Downloader] Setting as downloading for %o", item);
+  this.downloads_in_progress.push(item);
+  item.startDownload();
 }
 
-Downloader.prototype.unregisterDownload = function(entry, status) {
+// Prende una item e ne termina il download, settando lo status
+// (che defaulta a DOWNLOADED)
+Downloader.prototype.unregisterDownload = function(item, status) {
   if (!status)
     status = 'DOWNLOADED'
-  console.log("[Downloader] Unregistering download for %o with status %s", entry, status);
-  if (! this.downloads_in_progress.delete(entry))
-    console.log("[Downloader] La entry %o non mi risultava in downloads_in_progress.. strano!?",
-		entry);
+  console.log("[Downloader] Unregistering download for %o with status %s", item, status);
+  if (! this.downloads_in_progress.delete(item))
+    console.log("[Downloader] La item %o non mi risultava in downloads_in_progress.. strano!?",
+		item);
   try {
-    entry.finishDownload(status);
+    item.finishDownload(status);
   } catch (e) {
-    console.log("entry non aveva metodo o qualcosa di simile? %o", e);
+    console.log("[Downloader] item non aveva metodo o qualcosa di simile? %o", e);
   }
 }
 
-Downloader.prototype.canDownload = function(entry) {
+Downloader.prototype.canDownload = function(item) {
   if (this.downloads_in_progress.length > 6) {
     console.log("[Downloader] Non lo scarico adesso, ho piu' di 6 dl in progress");
     return  false;
   }
-  if (entry.isDownloading()) {
+  if (item.isDownloading()) {
     console.log("[Downloader] Non lo scarico, e' gia' in coda");
     return false
   }
   return true;
 }
 
-// Takes a (serviced) XMLHttpRequest and returns hash with content range info.
+// Takes a (serviced) XMLHttpRequest and returns hash with content range info
+// as start, end, total
 Downloader.prototype.parseReqChunks = function(req) {
   var md = req.getResponseHeader("Content-Range").match(/(\d+)-(\d+)\/(\d+)/);
   if (!md) {
@@ -108,17 +112,17 @@ Downloader.prototype.downloadFile = function(url, local) {
   oReq.send();
 }
 
-Downloader.prototype.downloadPlaylistEntry = function(entry, chunk) {
+Downloader.prototype.downloadPlaylistItem = function(item, chunk) {
   if (!chunk)
     chunk = 0;
-  console.log("[Downloader] Richiesto dl di %o, chunk: %i", entry, chunk);
-  if (chunk > 0 || this.canDownload(entry)) {
-    console.log("[Downloader] ...Ok scarico %o", entry);
+  console.log("[Downloader] Richiesto dl di %o, chunk: %i", item, chunk);
+  if (chunk > 0 || this.canDownload(item)) {
+    console.log("[Downloader] ...Ok scarico %o", item);
   } else {
     return;
   }
   var oReq = new XMLHttpRequest;
-  oReq.open("GET", entry.remoteUrl, true);
+  oReq.open("GET", item.remoteUrl, true);
   oReq.responseType = "blob";
   var start = chunk * CHUNK_SIZE;
   var end = ((chunk + 1) * CHUNK_SIZE) - 1;
@@ -127,37 +131,36 @@ Downloader.prototype.downloadPlaylistEntry = function(entry, chunk) {
   oReq.onload = function(oEvent) {
     if (oEvent.target.status == 200) {
       console.log("[Downloader] Request for %o succeded in single run with a 200, saving file!", url);
-      this.saveResponseToFile(oReq.response, entry);
+      this.saveResponseToFile(oReq.response, item);
     } else if (oEvent.target.status == 206) { // Partial
       if (this.isReqSingleChunk(oReq)) {
-        this.saveResponseToFile(oReq.response, entry);
+        this.saveResponseToFile(oReq.response, item);
       } else if (this.isReqFirstChunk(oReq)) {
-        this.startPartialResponse(oReq.response, entry);
+        this.startPartialResponse(oReq.response, item);
       } else if (this.isReqMiddleChunk(oReq)) {
-        this.savePartialResponseToFile(oReq.response, entry, chunk);
+        this.savePartialResponseToFile(oReq.response, item, chunk);
       } else { // Segna che e' finito
 	console.log("[Downloader] Looks finished, parsed req %o", this.parseReqChunks(oReq));
-        this.finishPartialResponseToFile(oReq.response, entry);
+        this.finishPartialResponseToFile(oReq.response, item);
       }
     } else {
-      console.log("[Downloader] Request for %o failed: %o", entry, oEvent.target.status);
-      this.unregisterDownload(entry, 'ERROR');
-
+      console.log("[Downloader] Request for %o failed: %o", item, oEvent.target.status);
+      this.unregisterDownload(item, 'ERROR');
     }
   }.bind(this);
   oReq.onloadstart = function() {
     if (chunk == 0)
-    this.registerDownload(entry.localFile);
+    this.registerDownload(item);
   }.bind(this);
   oReq.send();
 };
 
 // Appende a un file esistente
-Downloader.prototype.savePartialResponseToFile = function(response, entry, chunk) {
+Downloader.prototype.savePartialResponseToFile = function(response, item, chunk) {
   console.log("[Downloader] in savePartialResponseToFile, saving %o bytes to file: %o",
               response.size,
-              entry.tmpFile());
-  this.filesystem.root.getFile(entry.tmpFile(),
+              item.tmpFile());
+  this.filesystem.root.getFile(item.tmpFile(),
 			       { create: false },
 			       function(fileEntry) {
     // Create a FileWriter object for our FileEntry
@@ -165,15 +168,15 @@ Downloader.prototype.savePartialResponseToFile = function(response, entry, chunk
       fileWriter.seek(fileWriter.length);
       fileWriter.write(response);
       fileWriter.onwriteend = function(e) {
-	this.downloadFile(entry, chunk + 1);
+	this.downloadFile(item, chunk + 1);
       }.bind(this);
     }.bind(this), error);
   }.bind(this), error);
 };
 
-Downloader.prototype.startPartialResponse = function(response, entry) {
-  console.log("[Downloader] in startPartialResponse, saving first chunk to file: %o", entry.tmpFile());
-  this.filesystem.root.getFile(entry.tmpFile(),
+Downloader.prototype.startPartialResponse = function(response, item) {
+  console.log("[Downloader] in startPartialResponse, saving first chunk to file: %o", item.tmpFile());
+  this.filesystem.root.getFile(item.tmpFile(),
 			       { create: true,
 			         exclusive: true },
 			       function(fileEntry) {
@@ -182,17 +185,17 @@ Downloader.prototype.startPartialResponse = function(response, entry) {
       fileWriter.write(response);
       fileWriter.onwriteend = function(e) {
 	// Continuiamo!
-        this.downloadFile(url, entry, 1);
+        this.downloadFile(url, item, 1);
       }.bind(this);
     }.bind(this), error);
   }.bind(this), error);
 };
 
-Downloader.prototype.finishPartialResponseToFile = function(response, entry) {
+Downloader.prototype.finishPartialResponseToFile = function(response, item) {
   console.log("[Downloader] in finishPartialResponseToFile, saving last %o bytes to file: %o",
               response.size,
-              entry.tmpFile());
-  this.filesystem.root.getFile(entry.tmpFile(),
+              item.tmpFile());
+  this.filesystem.root.getFile(item.tmpFile(),
 			       { create: false },
 			       function(fileEntry) {
     // Create a FileWriter object for our FileEntry, and seek to end
@@ -200,14 +203,14 @@ Downloader.prototype.finishPartialResponseToFile = function(response, entry) {
       fileWriter.seek(fileWriter.length);
       fileWriter.write(response);
       fileWriter.onwriteend = function(e) {
-	console.log("[Downloader] Riapro %o per spostarlo", entry.tmpFile())
+	console.log("[Downloader] Riapro %o per spostarlo", item.tmpFile())
 
-	this.filesystem.root.getFile(entry.tmpFile(), { create: false }, function(fileEntry) {
-          fileEntry.moveTo(this.filesystem.root, entry.localFile, function() {
-	    console.log("[Downloader] Ho spostato %o in %o", entry.tmpFile(), entry.localFile)
-	    this.filer.addFileByName(entry.localFile);
-	    this.unregisterDownload(entry);
-	    entry.finishDownload();
+	this.filesystem.root.getFile(item.tmpFile(), { create: false }, function(fileEntry) {
+          fileEntry.moveTo(this.filesystem.root, item.localFile, function() {
+	    console.log("[Downloader] Ho spostato %o in %o", item.tmpFile(), item.localFile)
+	    this.filer.addFileByName(item.localFile);
+	    this.unregisterDownload(item);
+	    item.finishDownload();
 	  }.bind(this), error);
         }.bind(this), error);
       }.bind(this);
@@ -216,12 +219,12 @@ Downloader.prototype.finishPartialResponseToFile = function(response, entry) {
 };
 
 // Quello usato per scrivere direttamente, senza chunks; Ha richiesto accrocco per cui
-// entry puo' essere sia un playlistItem sia una stringa (in tal caso, il filename)
-Downloader.prototype.saveResponseToFile = function(response, entry) {
+// item puo' essere sia un playlistItem sia una stringa (in tal caso, il filename)
+Downloader.prototype.saveResponseToFile = function(response, item) {
   console.log("[Downloader] in saveResponseToFile, saving %o bytes to file: %o",
               response.size,
-              entry.localFile || entry);
-  this.filesystem.root.getFile(entry.localFile || entry,
+              item.localFile || item);
+  this.filesystem.root.getFile(item.localFile || item,
 			       { create: true,
 			         exclusive: true },
 			       function(fileEntry) {
@@ -229,11 +232,11 @@ Downloader.prototype.saveResponseToFile = function(response, entry) {
     fileEntry.createWriter(function(fileWriter) {
       fileWriter.write(response);
         fileWriter.onwriteend = function(e) {
-          console.log("[Downloader] Ultimato salvataggio di %o", entry);
-	  this.unregisterDownload(entry);
-	  this.filer.addFileByName(entry.localFile || entry);
-	  if (entry.localFile)
-	    entry.finishDownload();
+          console.log("[Downloader] Ultimato salvataggio di %o", item);
+	  this.unregisterDownload(item);
+	  this.filer.addFileByName(item.localFile || item);
+	  if (item.localFile)
+	    item.finishDownload();
 	}.bind(this);
     }.bind(this), error);
   }.bind(this), error);
