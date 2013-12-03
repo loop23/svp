@@ -1,8 +1,8 @@
 {
   "name": "LocalVideo",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "manifest_version": 2,
-  "description": "Video Player with local filesystem",
+  "description": "Video Player with local filesystem - playlist version",
   "icons": {
     "16": "img/icon-16.png",
     "24": "img/icon-24.png",
