@@ -6,6 +6,9 @@ function keyHandler(e) {
     case 'q':
       showPlaylist();
       break;
+    case 'w':
+      showDownloader();
+      break;
     case 'e':
       showCurrentVideo();
       break;
@@ -28,6 +31,10 @@ function keyHandler(e) {
 
 function showPlaylist() {
   alertify.alert("<p>Playlist</p>" + filer.playList.asHtmlList());
+}
+
+function showDownloader() {
+  alertify.alert(filer.downloader.toString());
 }
 
 function showCurrentVideo() {

@@ -15,7 +15,7 @@ playlistItem = function(filer, remoteUrl, localFile) {
   this.localFile = localFile;
   if (localFile) {
     this.status = 'DOWNLOADED';
-    console.log("Creato item via lf: %s", this);
+    console.debug("Creato item via lf: %s", this);
     return;
   }
   this.remoteUrl = remoteUrl;
@@ -24,7 +24,7 @@ playlistItem = function(filer, remoteUrl, localFile) {
     this.localFile = md[1];
     this.status = filer.fileExistsLocally(this.localFile) ? 'DOWNLOADED' : 'PENDING';
   }
-  console.log("Creato item via remoteUrl: %s", this.toString())
+  console.debug("Creato item via remoteUrl: %s", this.toString())
 };
 
 playlistItem.prototype.ispending = function() {
@@ -36,7 +36,7 @@ playlistItem.prototype.tmpFile = function() {
 };
 
 playlistItem.prototype.startDownload = function() {
-  console.log("Invocata startDownload su %s", this.toString());
+  console.debug("[PlaylistItem] Invocata startDownload su %s", this.toString());
   if (this.status == 'DOWNLOADING')
     console.warn("Attenzione, item %o era gia' DOWNLOADING!", this.localFile);
   this.status = 'DOWNLOADING';

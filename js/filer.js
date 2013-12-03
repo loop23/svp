@@ -5,11 +5,11 @@
  */
 
 // In dev e' 2, in prod e' 1.. come gestirlo non lo so ancora.
-const PLAYLIST_URL = 'http://madre-dam.atcloud.it/playlists/2.txt';
+const PLAYLIST_URL = 'http://madre-dam.atcloud.it/playlists/1.txt';
 const PLAYLIST_REFRESH_TIME = 1000 * 60;
 
 Filer = function(filesystem, container_name, video) {
-  console.log("[Filer] - initializeing w/ %o, cn: %o, video el: %o", filesystem, container_name, video);
+  console.info("[Filer] - initializeing w/ %o, cn: %o, video el: %o", filesystem, container_name, video);
   this.filesystem = filesystem;
   this.video = video;
   this.downloader = new Downloader(filesystem, this);
@@ -47,14 +47,14 @@ Filer = function(filesystem, container_name, video) {
   this.listDir(this.filesystem.root);
 
   this.initial_cb = setInterval(function() {
-    console.log("[Filer] Posso iniziare a playare?");
+    console.debug("[Filer] Posso iniziare a playare?");
     if (this.playList.canPlay()) { // Can play
-      console.log("[Filer] Si! daje!");
+      console.debug("[Filer] Si! daje!");
       this.video.loadNext();
       this.clear_initial_cb();
       this.video.setupCallbacks();
     } else {
-      console.log("[Filer] non posso iniziare a playare")
+      console.debug("[Filer] non posso iniziare a playare")
     }
   }.bind(this), 1000 * 5);
 
@@ -65,16 +65,16 @@ Filer = function(filesystem, container_name, video) {
 
   // Done!
   this.requestPlaylistDownload();
-  console.log("[Filer] Initialized!");
+  console.info("[Filer] Initialized!");
 };
 
 Filer.prototype.clear_initial_cb = function() {
-  console.log("[Filer].clear_initial_cb");
+  console.debug("[Filer].clear_initial_cb");
   if (this.initial_cb == null) {
-    console.log("[Filer] ...Ma gia' la tolsi");
+    console.warn("[Filer] ...Ma gia' la tolsi");
     return;
   } else {
-    console.log("[Filer] ...La tolgo davvero");
+    console.debug("[Filer] ...La tolgo davvero");
     window.clearInterval(this.initial_cb);
     this.initial_cb = null;
   }
@@ -87,7 +87,7 @@ Filer.prototype.getNext = function() {
 
 // List (della root); Invocata allo startup
 Filer.prototype.listDir = function(dir) {
-  console.log("[Filer] Invocata list per dir '%s'", dir.fullPath);
+  console.debug("[Filer] Invocata list per dir '%s'", dir.fullPath);
   var node = this.getListNode(dir.fullPath);
   if (node.fetching) // Already fetching
     return;
@@ -99,7 +99,7 @@ Filer.prototype.listDir = function(dir) {
 // Invocata quando si e' finito di leggere le entries (ls)
 // Dovrebbe capitare solo allo startup?
 Filer.prototype.didReadEntries = function(dir, reader, entries) {
-  console.log("[Filer] didReadEntries con %i entries", entries.length)
+  console.debug("[Filer] didReadEntries con %i entries", entries.length)
   var node = this.getListNode(dir.fullPath);
   if (!entries.length) {
     node.fetching = false;
@@ -108,9 +108,9 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
   for (var i = 0; i < entries.length; ++i) {
     var entry = entries[i];
     if (entry.name.match(/\.tmp$/)) {
-      console.log("[Filer] Provo a eliminare il tmpfile %o", entry);
+      console.debug("[Filer] Provo a eliminare il tmpfile %o", entry);
       entry.remove(function() {
-	console.log("[Filer] Eliminata entry %o da filesystem locale", entry);
+	console.debug("[Filer] Eliminata entry %o da filesystem locale", entry);
       });
     } else {
       this.addFile(entry);
@@ -122,9 +122,9 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
 
 // Callback invocata durante la listdir per ogni fileEntry, decide cosa farci
 Filer.prototype.addFile = function(fileEntry) {
-  console.log("[Filer].addFile Processing entry: %o", fileEntry.name);
+  console.debug("[Filer].addFile Processing entry: %o", fileEntry.name);
   if (!fileEntry.isFile) {
-    console.log("[Filer] Toh, e' stato aggiunto un non-file: %o, non ci faccio niente", fileEntry);
+    console.warn("[Filer] Toh, e' stato aggiunto un non-file: %o, non ci faccio niente", fileEntry);
     return;
   }
   if (fileEntry.name.match(/\.tmp$/)) // tmpfile
@@ -134,17 +134,17 @@ Filer.prototype.addFile = function(fileEntry) {
   } else if (fileEntry.name.match(/\.mp4$/)) { // files video
     this.localFiles.push(fileEntry.name);
   } else {
-    console.log("[Filer] Aggiunto file inutile (che non verra' playato perche' non corrisponde a nulla che io conosca) - lo elimino: %o",
+    console.warn("[Filer] Aggiunto file inutile (che non verra' playato perche' non corrisponde a nulla che io conosca) - lo elimino: %o",
 		fileEntry.name);
     fileEntry.remove(function() {
-      console.log("[Filer] Eliminato!");
+      console.debug("[Filer] Eliminato file inutile!");
     });
   }
 };
 
 // Aggiunge un file (per nome) alla lista dei files a me noti.
 Filer.prototype.addFileByName = function(filename) {
-  console.log("[Filer].addFileByName per file: %o..Io sono" + this, filename);
+  console.debug("[Filer].addFileByName per file: %o..Io sono" + this, filename);
   this.filesystem.root.getFile(filename,
 			       { create: false },
     function(fileEntry) {
@@ -154,40 +154,40 @@ Filer.prototype.addFileByName = function(filename) {
 
 // Controlla se un file col nome filename e' stato scaricato; Controlla su localFiles
 Filer.prototype.fileExistsLocally = function(filename) {
-  // console.log("[Filer] - controllo se %o esiste", filename);
+  // console.debug("[Filer] - controllo se %o esiste", filename);
   var do_you = this.localFiles.some(function(e) { return e == filename });
-  // console.log("[Filer].fileExistsLocally per %o torna: %o", filename, do_you);
+  // console.debug("[Filer].fileExistsLocally per %o torna: %o", filename, do_you);
   return do_you;
 };
 
 Filer.prototype.deleteRemoved = function(delenda) {
-  console.log("[Filer] deleting removed: delenda: %o", delenda);
+  console.debug("[Filer] deleting removed: delenda: %o", delenda);
   delenda.forEach(function(filename) {
-    console.log("[Filer] deleting ... %o", filename);
+    console.debug("[Filer] deleting ... %o", filename);
     this.deleteFile(filename);
   }.bind(this), error);
 }
 
 // Legge la playlist locale e invoca il suo parser
 Filer.prototype.readLocalPlaylist = function() {
-  console.log("[Filer] ReadLocalPlaylist called");
+  console.debug("[Filer] ReadLocalPlaylist called");
   this.filesystem.root.getFile('playlist',
 			       { create: false },
 			       function(fileEntry) {
-    console.log("[Filer] 1 Ottenuta entry di playlist");
+    console.debug("[Filer] 1 Ottenuta entry di playlist");
     fileEntry.file(function(file) {
-       console.log("[Filer] 2 Ottenuto file");
+       console.debug("[Filer] 2 Ottenuto file");
        var reader = new FileReader();
        reader.onload = function(e) {
 	 var txt = e.target.result;
-	 console.log("[Filer] 3 Dovrei avere il testo:\n%o", txt);
+	 console.debug("[Filer] 3 Dovrei avere il testo:\n%o", txt);
 	 if (!txt) {
-	   console.log("[Filer] Strano, niente testo!");
+	   console.warn("[Filer] Strano, niente testo!");
 	   return; // Non c'e' nessun testo!
 	 }
 	 this.deleteRemoved(this.playList.parsePlaylistText(txt));
        }.bind(this);
-       console.log("[Filer] - mi accingo a chiamare reader.readastext su file %o", file);
+       console.debug("[Filer] - mi accingo a chiamare reader.readastext su file %o", file);
        reader.readAsText(file);
     }.bind(this), error);
   }.bind(this), error);
@@ -204,14 +204,14 @@ Filer.prototype.requestPlaylistDownload = function() {
 
 // Chiaramente, elimina un file; Se ha successo lo elimina dalla playList
 Filer.prototype.deleteFile = function(filename) {
-  console.log("[Filer].deleteFile con filename: %o", filename);
+  console.debug("[Filer].deleteFile con filename: %o", filename);
   this.filesystem.root.getFile(filename,
 			      { create: false },
 			      function(fileEntry) {
     fileEntry.remove(function() {
-      // console.log("[Filer].deleteFile, dentro fileEntry.remove... chi e' this? %o", this);
+      // console.debug("[Filer].deleteFile, dentro fileEntry.remove... chi e' this? %o", this);
       this.localFiles = this.localFiles.filter(function(e) { return e != filename; });
-      console.log("[Filer] Rimosso %o da localFiles", filename);
+      console.debug("[Filer] Rimosso %o da localFiles", filename);
     }.bind(this));
   }.bind(this));
 };
@@ -219,7 +219,7 @@ Filer.prototype.deleteFile = function(filename) {
 // Invocata quando il downloader ha finito di scaricare filename
 // e lo ha salvato
 Filer.prototype.notifyDownload = function(filename) {
-  console.log("[Filer] notifyDownload per %s", filename);
+  console.debug("[Filer] notifyDownload per %s", filename);
   this.localFiles.push(filename);
   this.playList.finishDownload(filename);
 };

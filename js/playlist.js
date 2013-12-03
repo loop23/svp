@@ -13,7 +13,7 @@ playList.prototype.getNext = function() {
   this.current += 1;
   if (this.current >= this.items.length)
     this.current = 0;
-  // console.log("[Playlist] GetNext su %s ha indice a %i", this, this.current);
+  // console.debug("[Playlist] GetNext su %s ha indice a %i", this, this.current);
   return this.getCurrent();
 };
 
@@ -22,22 +22,22 @@ playList.prototype.getCurrent = function() {
 };
 
 playList.prototype.canPlay = function() {
-  return this.items.some(function(item) { return item.status === 'DOWNLOADED'; });
+  return this.items[0] && this.items[0].status === 'DOWNLOADED';
 };
 
 // Parsa una serie di linee separate da nl.
 // Torna array di files che possono essere cancellati.
 // Controlla il sum, se e' come prima non fa nulla
 playList.prototype.parsePlaylistText = function(text) {
-  console.log("[Playlist].parsePlaylistText: I have some text for %i bytes", text.length);
+  console.info("[Playlist].parsePlaylistText: I have some text for %i bytes", text.length);
   var new_sum = text.sum();
   if (new_sum == this.lastSum) {
-    console.log("[Playlist] unchanged!");
+    console.debug("[Playlist] unchanged!");
     return [];
   }
   // Copio i files che ho adesso, in modo da poter calcolare la diff
   var old_files = this.filenames();
-  console.log("[Playlist] Before parsing,  old_files: %o", old_files);
+  console.debug("[Playlist] Before parsing,  old_files: %o", old_files);
   var new_items = [];
   text.split("\n").forEach(function(line) {
     var md = line.match(/.+\/(.+)\?(\d+)$/);
@@ -50,7 +50,7 @@ playList.prototype.parsePlaylistText = function(text) {
       new_items.push(new_item);
     } else {
       if (line != '')
-        console.log("[Playlist] Linea non parsabile: %o", line);
+        console.warn("[Playlist] Linea non parsabile: %o", line);
     }
   }.bind(this));
   // new_items contiene gli item appena letti;
@@ -59,17 +59,17 @@ playList.prototype.parsePlaylistText = function(text) {
   // Bene, a questo punto dovrei poter cancellare i files che non ho piu'
   var maybe_delete = old_files.difference(this.filenames());
   if (maybe_delete.length > 0) {
-    console.log("[Playlist]parsePlayList torna %o to delete:", maybe_delete);
+    console.debug("[Playlist]parsePlayList torna %o to delete:", maybe_delete);
   };
   this.downloadMissing();
   return maybe_delete;
 };
 
 playList.prototype.downloadMissing = function() {
-  console.log("[playList] Downloading missing files");
+  console.debug("[playList] Downloading missing files");
   this.items.forEach(function(item) {
     if (item.ispending()) {
-      console.log("dlmiss, %s was pending, downloading it", item.toString());
+      console.debug("dlmiss, %s was pending, downloading it", item.toString());
       this.filer.downloader.downloadPlaylistItem(item);
     } else {
       ;
@@ -82,7 +82,7 @@ playList.prototype.filenames = function() {
 };
 
 playList.prototype.hasDownloadedFile = function(filename) {
-  console.log("[playlist] ho file %o ?", filename);
+  console.debug("[playlist] ho file %o ?", filename);
   if (this.items.some(function(e) {
     return e.localFile === filename &&
     e.status === 'DOWNLOADED'; })) {
