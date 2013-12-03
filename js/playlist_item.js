@@ -7,14 +7,15 @@ Ha attributi:
 */
 
 // Constructor
-// Interessante: unica dipendenza per filer e' chiedergli se fileExistsLocally - che pero' viene delegato
-// alla playList ; forse converrebbe dipendere da playlist invece che da filer?
+// Unica dipendenza per filer e' chiedergli se fileExistsLocally ;
+// forse converrebbe dipendere da playlist invece che da filer?
 // O addurittura da downloader? mi farebbe comodo iniziare qui i dl
 playlistItem = function(filer, remoteUrl, localFile) {
   this.filer = filer;
   this.localFile = localFile;
   if (localFile) {
     this.status = 'DOWNLOADED';
+    console.log("Creato item via lf: %s", this);
     return;
   }
   this.remoteUrl = remoteUrl;
@@ -23,6 +24,7 @@ playlistItem = function(filer, remoteUrl, localFile) {
     this.localFile = md[1];
     this.status = filer.fileExistsLocally(this.localFile) ? 'DOWNLOADED' : 'PENDING';
   }
+  console.log("Creato item via remoteUrl: %s", this.toString())
 };
 
 playlistItem.prototype.ispending = function() {
@@ -34,6 +36,7 @@ playlistItem.prototype.tmpFile = function() {
 };
 
 playlistItem.prototype.startDownload = function() {
+  console.log("Invocata startDownload su %s", this.toString());
   if (this.status == 'DOWNLOADING')
     console.warn("Attenzione, item %o era gia' DOWNLOADING!", this.localFile);
   this.status = 'DOWNLOADING';

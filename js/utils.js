@@ -149,7 +149,7 @@ FileError.prototype.toString = function() {
   return "[FileError: " + this.message + ']';
 };
 
-// Just like ruby delete
+// Just like ruby delete!
 Array.prototype.delete = function(item) {
   var pos = this.indexOf(item);
   if (pos > -1)
@@ -158,16 +158,26 @@ Array.prototype.delete = function(item) {
     return null;
 };
 
-// Just like ruby include?
-Array.prototype.include = function(item) {
-    if (this.indexOf(item) >= 0)
-	return true;
-    else
-	return false;
-};
+// Superdumb sum function to check for sameness in pl text
+String.prototype.sum = function() {
+  var ss = 0;
+  for (var i = 0; i < this.length; i++) {
+    ss += this.charCodeAt(i);
+  }
+  return ss;
+}
+
+// // Just like ruby include?
+// Array.prototype.include = function(item) {
+//     if (this.indexOf(item) >= 0)
+// 	return true;
+//     else
+// 	return false;
+// };
 
 // Useful and okish array difference.
 // Returns a new array with all elements of a2 removed from self
+// Similar to ruby Array#-
 Array.prototype.difference = function(a2) {
   var tmp = this.slice(0);
   for (var i=0; i < a2.length; i++) {
@@ -177,26 +187,36 @@ Array.prototype.difference = function(a2) {
   return tmp;
 };
 
-Array.prototype.circulate = function(arg) {
-  var tmp;
-  if (arg) {
-    var idx = null;
-    for (var i = 0; i < this.length; i++) {
-      if (this[i].indexOf(arg) == 0) {
-        idx = i;
-        break;
-      }
-    }
-    if (idx) {
-      tmp = this.splice(idx,1)[0];
-    } else {
-      tmp = this.shift();
-    }
-  } else {
-    tmp = this.shift();
-  }
-  // Se ho trovato un item lo rimetto in fondo
-  if (tmp)
-    this.push(tmp);
-  return tmp;
-};
+// Array.prototype.circulate = function(arg) {
+//   var tmp;
+//   if (arg) {
+//     var idx = null;
+//     for (var i = 0; i < this.length; i++) {
+//       if (this[i].indexOf(arg) == 0) {
+//         idx = i;
+//         break;
+//       }
+//     }
+//     if (idx) {
+//       tmp = this.splice(idx,1)[0];
+//     } else {
+//       tmp = this.shift();
+//     }
+//   } else {
+//     tmp = this.shift();
+//   }
+//   // Se ho trovato un item lo rimetto in fondo
+//   if (tmp)
+//     this.push(tmp);
+//   return tmp;
+// };
+
+// Filer.prototype.formatSize = function(size) {
+//   var unit = 0;
+//   while (size > 1024 && unit < 5) {
+//     size /= 1024;
+//     unit++;
+//   }
+//   size = Math.floor(size);
+//   return size + ' ' + ['', 'K', 'M', 'G', 'T'][unit] + 'B';
+// };

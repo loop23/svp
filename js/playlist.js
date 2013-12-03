@@ -5,6 +5,7 @@ playList = function(filer) {
   this.filer = filer;
   this.current = -1;
   this.items = [];
+  this.lastSum = -1;
 };
 
 // Proper pl management: getNext and getCurrent
@@ -12,7 +13,7 @@ playList.prototype.getNext = function() {
   this.current += 1;
   if (this.current >= this.items.length)
     this.current = 0;
-  console.log("[Playlist] GetNext su %s ha indice a %i", this, this.current);
+  // console.log("[Playlist] GetNext su %s ha indice a %i", this, this.current);
   return this.getCurrent();
 };
 
@@ -21,15 +22,19 @@ playList.prototype.getCurrent = function() {
 };
 
 playList.prototype.canPlay = function() {
-  return this.items.some(function(item) { return item.status == 'DOWNLOADED'; });
+  return this.items.some(function(item) { return item.status === 'DOWNLOADED'; });
 };
 
 // Parsa una serie di linee separate da nl.
-// Torna array di files che possono essere cancellati
+// Torna array di files che possono essere cancellati.
+// Controlla il sum, se e' come prima non fa nulla
 playList.prototype.parsePlaylistText = function(text) {
-  console.log("[Playlist].parsePlaylistText: I (%o) have this playlist text:\n%o",
-  	      this,
-  	      text);
+  console.log("[Playlist].parsePlaylistText: I have some text for %i bytes", text.length);
+  var new_sum = text.sum();
+  if (new_sum == this.lastSum) {
+    console.log("[Playlist] unchanged!");
+    return [];
+  }
   // Copio i files che ho adesso, in modo da poter calcolare la diff
   var old_files = this.filenames();
   console.log("[Playlist] Before parsing,  old_files: %o", old_files);
@@ -50,6 +55,7 @@ playList.prototype.parsePlaylistText = function(text) {
   }.bind(this));
   // new_items contiene gli item appena letti;
   this.items = new_items;
+  this.lastSum = new_sum;
   // Bene, a questo punto dovrei poter cancellare i files che non ho piu'
   var maybe_delete = old_files.difference(this.filenames());
   if (maybe_delete.length > 0) {
@@ -60,15 +66,15 @@ playList.prototype.parsePlaylistText = function(text) {
 };
 
 playList.prototype.downloadMissing = function() {
+  console.log("[playList] Downloading missing files");
   this.items.forEach(function(item) {
-		       console.log("dlmiss, item: %s", item);
-		       if (item.ispending) {
-			 console.log("dlmiss, was pending, downloading it");
-			 this.filer.downloader.downloadPlaylistItem(item);
-		       } else {
-			 console.log("No c'era!");
-		       }
-      });
+    if (item.ispending()) {
+      console.log("dlmiss, %s was pending, downloading it", item.toString());
+      this.filer.downloader.downloadPlaylistItem(item);
+    } else {
+      ;
+    }
+  });
 };
 
 playList.prototype.filenames = function() {
@@ -76,6 +82,7 @@ playList.prototype.filenames = function() {
 };
 
 playList.prototype.hasDownloadedFile = function(filename) {
+  console.log("[playlist] ho file %o ?", filename);
   if (this.items.some(function(e) {
     return e.localFile === filename &&
     e.status === 'DOWNLOADED'; })) {
@@ -84,11 +91,19 @@ playList.prototype.hasDownloadedFile = function(filename) {
   return false;
 };
 
+// La pl viene notificata cosi' quando un dl termina
+playList.prototype.finishDownload = function(filename) {
+  for (var i = 0; i < this.items.length; i++) {
+    if (this.items[i].localFile == filename)
+      this.items[i].finishDownload();
+  }
+}
+
 // Need that to display in nice fashion
 playList.prototype.asHtmlList = function() {
   var out = '<ul class="playlist">';
-  for (var i = 0; i < this.length; i ++) {
-    out += '<li>' + (this.current == i ? '&gt; ' : '  ') + this[i] + '</li>';
+  for (var i = 0; i < this.items.length; i ++) {
+    out += '<li>' + (this.current == i ? '&gt; ' : '  ') + this.items[i] + '</li>';
   };
   out += '</ul>';
   return out;

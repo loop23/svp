@@ -13,16 +13,16 @@ Video = function(filesystem, container, filer) {
 };
 
 // Apre il file locale in path e e lo
-Video.prototype.open = function(entry) {
-  console.log("[Video].open con entry?: %o", entry);
-  this.filesystem.root.getFile(entry.localFile,
+Video.prototype.open = function(item) {
+  // console.log("[Video].open con: %o", item);
+  this.filesystem.root.getFile(item.localFile,
 			       {},
 			       this.loadVideo.bind(this),
-			       error); //.bind(null, "getFile: " + item.localFile));
+			       error);
 }
 
 Video.prototype.loadVideo = function(entry) {
-  console.log("[Video] loadVideo con entry %o", entry);
+  // console.log("[Video] loadVideo con entry %o", entry);
   var vd = $('#video');
   vd.src = entry.toURL();
   vd.removeAttribute('controls');
@@ -35,7 +35,7 @@ Video.prototype.loadVideo = function(entry) {
 
 Video.prototype.loadNext = function() {
   var item = this.filer.getNext();
-  console.log("[Video] loadNext, item tornato da filer: %o", item);
+  // console.log("[Video] loadNext, item tornato da filer: %o", item);
   if (item)
     this.open(item);
 };

@@ -40,6 +40,6 @@ function skipVideo() {
 }
 
 function loadPlaylist() {
-  alertify.alert("Unimplemented!!");
+  filer.requestPlaylistDownload();
 }
 

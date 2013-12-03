@@ -20,8 +20,8 @@ Downloader = function(filesystem, filer) {
 
 // Dice a me stesso e al playlistItem che e' in download
 Downloader.prototype.registerDownload = function(item) {
-  console.log("[Downloader] Setting as downloading for %o", item);
-  this.downloads_in_progress.push(item);
+  console.log("[Downloader].registerDownload - Setting as downloading for %o", item.toString());
+  this.downloads_in_progress.push(item.localFile);
   item.startDownload();
 };
 
@@ -48,8 +48,11 @@ Downloader.prototype.canDownload = function(item) {
     return  false;
   }
   if (item.isDownloading()) {
-    console.log("[Downloader] Non lo scarico, e' gia' in coda");
+    console.log("[Downloader] Non lo scarico, isDownloading dice true");
     return false;
+  }
+  if (this.downloads_in_progress.indexOf(item.localFile) > -1) {
+    console.log("[Donwloader] Non lo scarico, lo sto gia' scaricando")
   }
   return true;
 }
@@ -118,12 +121,13 @@ Downloader.prototype.downloadFile = function(url, local) {
   oReq.send();
 };
 
+// Prende un pl item e lo scarica, con gestione chunks (quindi appende se necessario)
 Downloader.prototype.downloadPlaylistItem = function(item, chunk) {
   if (!chunk)
     chunk = 0;
-  console.log("[Downloader] Richiesto dl di item: %s, chunk: %i", item, chunk);
+  console.log("[Downloader] Richiesto dl di item: %s, chunk: %i", item.toString(), chunk);
   if (chunk > 0 || this.canDownload(item)) {
-    console.log("[Downloader] ...Ok scarico %o", item);
+    console.log("[Downloader] ...Ok scarico %o su %o", item.remoteUrl, item.localFile);
   } else {
     return;
   }
@@ -136,11 +140,12 @@ Downloader.prototype.downloadPlaylistItem = function(item, chunk) {
   // Funzione che scrive il blob quando abbiamo la risposta (ed e' un 200)
   oReq.onload = function(oEvent) {
     if (oEvent.target.status == 200) {
-      console.log("[Downloader] Request for %o succeded in single run with a 200, saving file!", url);
-      this.saveResponseToFile(oReq.response, item);
+      console.log("[Downloader] Request for %o succeded in single run with a 200, saving file!", item.remoteUrl);
+      this.saveResponseToFile(oReq.response, item.localFile);
     } else if (oEvent.target.status == 206) { // Partial
       if (this.isReqSingleChunk(oReq)) {
-        this.saveResponseToFile(oReq.response, item);
+	console.log("[Downloader] Request for %o succedeed in single chunk with a 206, saving", item.remoteUrl)
+        this.saveResponseToFile(oReq.response, item.localFile);
       } else if (this.isReqFirstChunk(oReq)) {
         this.startPartialResponse(oReq.response, item);
       } else if (this.isReqMiddleChunk(oReq)) {
@@ -174,7 +179,7 @@ Downloader.prototype.savePartialResponseToFile = function(response, item, chunk)
       fileWriter.seek(fileWriter.length);
       fileWriter.write(response);
       fileWriter.onwriteend = function(e) {
-	this.downloadFile(item, chunk + 1);
+	this.downloadPlaylistItem(item, chunk + 1);
       }.bind(this);
     }.bind(this), error);
   }.bind(this), error);
@@ -186,12 +191,15 @@ Downloader.prototype.startPartialResponse = function(response, item) {
 			       { create: true,
 			         exclusive: true },
 			       function(fileEntry) {
+    console.log("spr: got entry");
     // Create a FileWriter object for our FileEntry
     fileEntry.createWriter(function(fileWriter) {
+      console.log("spr: got writer");
       fileWriter.write(response);
       fileWriter.onwriteend = function(e) {
+	console.log("spr: written!");
 	// Continuiamo!
-        this.downloadFile(url, item, 1);
+        this.downloadPlaylistItem(item, 1);
       }.bind(this);
     }.bind(this), error);
   }.bind(this), error);
@@ -214,9 +222,7 @@ Downloader.prototype.finishPartialResponseToFile = function(response, item) {
 	this.filesystem.root.getFile(item.tmpFile(), { create: false }, function(fileEntry) {
           fileEntry.moveTo(this.filesystem.root, item.localFile, function() {
 	    console.log("[Downloader] Ho spostato %o in %o", item.tmpFile(), item.localFile);
-	    this.filer.addFileByName(item.localFile);
-	    this.unregisterDownload(item);
-	    item.finishDownload();
+	    this.finished(item.localFile);
 	  }.bind(this), error);
         }.bind(this), error);
       }.bind(this);
@@ -224,31 +230,46 @@ Downloader.prototype.finishPartialResponseToFile = function(response, item) {
   }.bind(this), error);
 };
 
-// Quello usato per scrivere direttamente, senza chunks; Ha richiesto accrocco per cui
-// item puo' essere sia un playlistItem sia una stringa (in tal caso, il filename)
-Downloader.prototype.saveResponseToFile = function(response, item) {
-  console.log("[Downloader] in saveResponseToFile, saving %o bytes to item or file: %o",
+// Scrive Direttamente response su filename, e quindi triggera tutti i ciborii
+Downloader.prototype.saveResponseToFile = function(response, filename) {
+  console.log("[Downloader] in saveResponseToFile, saving %i bytes to filename: %o",
               response.size,
-              item);
-  this.filesystem.root.getFile(item.localFile,
+              filename);
+  this.filesystem.root.getFile(filename,
 			       { create: true,
 			         exclusive: true },
 			       function(fileEntry) {
-    console.log("Got file");
     // Create a FileWriter object for our FileEntry
+    console.log("Got file for writing");
     fileEntry.createWriter(function(fileWriter) {
-      console.log("Writer created");
+      // console.log("Writer created");
       fileWriter.write(response);
       fileWriter.onwriteend = function(e) {
-          console.log("[Downloader] Ultimato salvataggio di %o", item);
-	  this.unregisterDownload(item);
-	  this.filer.addFileByName(item.localFile || item);
-	  if (item.localFile)
-	    item.finishDownload();
-	}.bind(this);
+        console.log("[Downloader] Ultimata scrittura di %o", filename);
+	if (filename == 'playlist') {
+	  console.log("[Downloader] Siccome era playlist la parso!")
+	  var reader = new FileReader();
+	  reader.addEventListener('loadend', function() {
+	    this.filer.deleteRemoved(this.filer.playList.parsePlaylistText(reader.result));
+	  }.bind(this));
+	  reader.readAsText(response);
+	  return;
+	} else {
+	  console.log("Si ci passo di qua per non playlist")
+	}
+	this.finished(filename);
+      }.bind(this);
     }.bind(this), error);
-  }.bind(this), error);
+  }.bind(this));
 };
+
+// Chiamata quando un download e' terminato
+Downloader.prototype.finished = function(filename) {
+  // Tolgo dalla mia idea di dls in progress
+  this.downloads_in_progress.delete(filename);
+  // E notifico il filer
+  this.filer.notifyDownload(filename);
+}
 
 Downloader.prototype.toString = function() {
   return "[Downloader downloading " + this.downloads_in_progress.length + ' files]';
