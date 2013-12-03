@@ -10,22 +10,26 @@ const CHUNK_SIZE = 1024 * 1024 * 16; // 16M
 Downloader = function(filesystem, filer) {
   this.filesystem = filesystem;
   this.filer = filer;
-  // At the beginning it's empty
+  // These two would make more sense if they were just string arrays i think :(
+  // Being items ties into details I don't need to know.
+  // At the beginning it's empty.
   this.downloads_in_progress = [];
-}
+  // The queued dl's
+  this.queued = [];
+};
 
-// Dice a me stesso e alla entry che e' in download
+// Dice a me stesso e al playlistItem che e' in download
 Downloader.prototype.registerDownload = function(item) {
   console.log("[Downloader] Setting as downloading for %o", item);
   this.downloads_in_progress.push(item);
   item.startDownload();
-}
+};
 
-// Prende una item e ne termina il download, settando lo status
+// Prende un playlistItem e ne termina il download, settando lo status
 // (che defaulta a DOWNLOADED)
 Downloader.prototype.unregisterDownload = function(item, status) {
   if (!status)
-    status = 'DOWNLOADED'
+    status = 'DOWNLOADED';
   console.log("[Downloader] Unregistering download for %o with status %s", item, status);
   if (! this.downloads_in_progress.delete(item))
     console.log("[Downloader] La item %o non mi risultava in downloads_in_progress.. strano!?",
@@ -37,6 +41,7 @@ Downloader.prototype.unregisterDownload = function(item, status) {
   }
 }
 
+// Controlla se item può essere downloadato
 Downloader.prototype.canDownload = function(item) {
   if (this.downloads_in_progress.length > 6) {
     console.log("[Downloader] Non lo scarico adesso, ho piu' di 6 dl in progress");
@@ -44,7 +49,7 @@ Downloader.prototype.canDownload = function(item) {
   }
   if (item.isDownloading()) {
     console.log("[Downloader] Non lo scarico, e' gia' in coda");
-    return false
+    return false;
   }
   return true;
 }
@@ -96,6 +101,7 @@ Downloader.prototype.isReqLastChunk = function(req) {
     return false;
 };
 
+// scarica url su local
 Downloader.prototype.downloadFile = function(url, local) {
   console.log("[Downloader].downloadFile per url: %o su local: %o", url, local);
   var oReq = new XMLHttpRequest;
@@ -110,12 +116,12 @@ Downloader.prototype.downloadFile = function(url, local) {
     }
   }.bind(this);
   oReq.send();
-}
+};
 
 Downloader.prototype.downloadPlaylistItem = function(item, chunk) {
   if (!chunk)
     chunk = 0;
-  console.log("[Downloader] Richiesto dl di %o, chunk: %i", item, chunk);
+  console.log("[Downloader] Richiesto dl di item: %s, chunk: %i", item, chunk);
   if (chunk > 0 || this.canDownload(item)) {
     console.log("[Downloader] ...Ok scarico %o", item);
   } else {
@@ -203,11 +209,11 @@ Downloader.prototype.finishPartialResponseToFile = function(response, item) {
       fileWriter.seek(fileWriter.length);
       fileWriter.write(response);
       fileWriter.onwriteend = function(e) {
-	console.log("[Downloader] Riapro %o per spostarlo", item.tmpFile())
+	console.log("[Downloader] Riapro %o per spostarlo", item.tmpFile());
 
 	this.filesystem.root.getFile(item.tmpFile(), { create: false }, function(fileEntry) {
           fileEntry.moveTo(this.filesystem.root, item.localFile, function() {
-	    console.log("[Downloader] Ho spostato %o in %o", item.tmpFile(), item.localFile)
+	    console.log("[Downloader] Ho spostato %o in %o", item.tmpFile(), item.localFile);
 	    this.filer.addFileByName(item.localFile);
 	    this.unregisterDownload(item);
 	    item.finishDownload();
@@ -221,17 +227,19 @@ Downloader.prototype.finishPartialResponseToFile = function(response, item) {
 // Quello usato per scrivere direttamente, senza chunks; Ha richiesto accrocco per cui
 // item puo' essere sia un playlistItem sia una stringa (in tal caso, il filename)
 Downloader.prototype.saveResponseToFile = function(response, item) {
-  console.log("[Downloader] in saveResponseToFile, saving %o bytes to file: %o",
+  console.log("[Downloader] in saveResponseToFile, saving %o bytes to item or file: %o",
               response.size,
-              item.localFile || item);
-  this.filesystem.root.getFile(item.localFile || item,
+              item);
+  this.filesystem.root.getFile(item.localFile,
 			       { create: true,
 			         exclusive: true },
 			       function(fileEntry) {
+    console.log("Got file");
     // Create a FileWriter object for our FileEntry
     fileEntry.createWriter(function(fileWriter) {
+      console.log("Writer created");
       fileWriter.write(response);
-        fileWriter.onwriteend = function(e) {
+      fileWriter.onwriteend = function(e) {
           console.log("[Downloader] Ultimato salvataggio di %o", item);
 	  this.unregisterDownload(item);
 	  this.filer.addFileByName(item.localFile || item);

@@ -46,11 +46,9 @@ Filer = function(filesystem, container_name, video) {
   this.playList = new playList(this);
   this.listDir(this.filesystem.root);
 
-  this.requestPlaylistDownload();
-
   this.initial_cb = setInterval(function() {
     console.log("[Filer] Posso iniziare a playare?");
-    if (this.playList.length > 0) { // Can play
+    if (this.playList.canPlay()) { // Can play
       console.log("[Filer] Si! daje!");
       this.video.loadNext();
       this.clear_initial_cb();
@@ -64,6 +62,7 @@ Filer = function(filesystem, container_name, video) {
   }, PLAYLIST_REFRESH_TIME);
 
   // Done!
+  this.requestPlaylistDownload();
   console.log("[Filer] Initialized!");
 };
 
@@ -120,7 +119,7 @@ Filer.prototype.didReadEntries = function(dir, reader, entries) {
 
 // Callback invocata durante la listdir per ogni fileEntry, decide cosa farci
 Filer.prototype.addFile = function(fileEntry) {
-  console.log("[Filer].addFile Processing entry: %o", fileEntry);
+  console.log("[Filer].addFile Processing entry: %o", fileEntry.name);
   if (!fileEntry.isFile) {
     console.log("[Filer] Toh, e' stato aggiunto un non-file: %o, non ci faccio niente", fileEntry);
     return;
@@ -128,12 +127,9 @@ Filer.prototype.addFile = function(fileEntry) {
   if (fileEntry.name.match(/\.tmp$/)) // tmpfile
     return;
   if (fileEntry.name === 'playlist') {
-    this.readPlaylist();
+    this.readLocalPlaylist();
   } else if (fileEntry.name.match(/\.mp4$/)) { // files video
-    var new_item = new playlistItem(this, null, fileEntry.name);
-    console.log("[Filer] Appendo nuova entry: %o alla playlist", new_item);
-    this.playList.appendItem(new_item);
-    this.localFiles.push(fileEntry.name)
+    this.localFiles.push(fileEntry.name);
   } else {
     console.log("[Filer] Aggiunto file inutile (che non verra' playato perche' non corrisponde a nulla che io conosca): %o",
 		fileEntry.name);
@@ -168,26 +164,26 @@ Filer.prototype.fileExistsLocally = function(filename) {
 };
 
 // Legge la playlist locale e invoca il suo parser
-Filer.prototype.readPlaylist = function() {
-  console.log("[Filer] ReadPlaylist on %o", this);
+Filer.prototype.readLocalPlaylist = function() {
+  console.log("[Filer] ReadLocalPlaylist called");
   this.filesystem.root.getFile('playlist',
 			       { create: false },
 			       function(fileEntry) {
-    console.log("1... %o", this);
+    console.log("[Filer] 1 Ottenuta entry");
     fileEntry.file(function(file) {
-       console.log("2... %o, file:", this, file);
+       console.log("[Filer] 2 Ottenuto file");
        var reader = new FileReader();
        reader.onload = function(e) {
 	 var txt = e.target.result;
-	 console.log("3... this: %o, e: %o - text?: %o", this, e, txt);
+	 console.log("[Filer] 3 Dovrei avere il testo:\n%o", txt);
 	 if (!txt) {
 	   console.log("[Filer] Strano, niente testo!");
 	   return; // Non c'e' nessun testo!
 	 }
 	 var delenda = this.playList.parsePlaylistText(txt);
-	 console.log("[Filer] Delenda: %o", delenda);
+	 console.log("[Filer] parsing pl dice che delenda: %o", delenda);
 	 delenda.forEach(function(filename) {
-	   console.log("4... %o", this);
+	   console.log("[Filer] deleting ... %o", filename);
 	   this.deleteFile(filename);
 	 }.bind(this), error);
        }.bind(this);
@@ -213,10 +209,9 @@ Filer.prototype.deleteFile = function(filename) {
 			      { create: false },
 			      function(fileEntry) {
     fileEntry.remove(function() {
-      console.log("[File].deleteFile, dentro fileEntry.remove... chi e' this? %o", this);
-      var plrem = this.playList.removeItem(filename);
-      this.localFiles = this.localFiles.filter(function(e) { return e != filename });
-      console.log("[Filer] Rimosso %o da local file, e da playlist? %o", filename, plrem);
+      // console.log("[Filer].deleteFile, dentro fileEntry.remove... chi e' this? %o", this);
+      this.localFiles = this.localFiles.filter(function(e) { return e != filename; });
+      console.log("[Filer] Rimosso %o da localFiles", filename);
     }.bind(this));
   }.bind(this));
 };
