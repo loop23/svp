@@ -16,6 +16,7 @@ Downloader = function(filesystem, filer) {
   this.inProgress = [];
   // The queued dl's
   this.queued = [];
+  console.info(">>>> Downloader initialized, fs: " + this.filesystem);
 };
 
 // Se c'e' qualcosa in coda la toglie e la scarica

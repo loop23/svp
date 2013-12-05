@@ -1,20 +1,10 @@
+// Invocata quando il ciborio e' pronto
 document.addEventListener('DOMContentLoaded', function() {
   openSyncableFileSystem();
   registerKeyHandler();
 });
 
-// Invocata quando il sistema torna il fs, inizializza la app.
-function onFileSystemOpened(fs) {
-  console.log('Got FileSystem: %o', fs);
-  var video = new Video(fs, '#video');
-  window.video = video;
-  var filer = new Filer(fs, '#filer', video);
-  window.filer = filer;
-  video.filer = filer;
-  // Simula il click, dovrebbe far sparire il cursore
-  setTimeout(function() { simulatedClick($('#video')); }, 5000);
-}
-
+// Apre il fs se puo'
 function openSyncableFileSystem() {
   if (!window || !window.webkitRequestFileSystem) {
     error("requestFileSystem unsupported");
@@ -25,6 +15,36 @@ function openSyncableFileSystem() {
 				 1024*1024*1024*30, // 30G
 				 onFileSystemOpened,
 				 error);
+}
+
+// Invocata quando il sistema torna il fs, inizializza la app.
+function onFileSystemOpened(fs) {
+  console.debug('Got FileSystem: %o', fs);
+  window.video = new Video(fs, '#video');
+  window.filer = new Filer(fs, '#filer', window.video);
+  hideCursor();
+  initWorker();
+}
+
+// Just to separate concerns into methods, opens worker and starts it
+function initWorker() {
+  window.worker = new Worker('js/dl_worker.js');
+  console.log("I have worker: %o", window.worker);
+  window.worker.addEventListener('message', function(e) {
+    console.info("Received from worker: %o", e);
+  }, false);
+  worker.postMessage({
+    'cmd': 'initialize',
+    'fs': window.filesystem
+// Filer can't be serialized :(
+//    'filer': window.filer
+  });
+}
+
+// Just to separate concerns into methods
+function hideCursor() {
+  // Simula il click, dovrebbe far sparire il cursore
+  setTimeout(function() { simulatedClick($('#video')); }, 5000);
 }
 
 function registerKeyHandler() {

@@ -5,7 +5,7 @@
  */
 
 // In dev e' 2, in prod e' 1.. come gestirlo non lo so ancora.
-const PLAYLIST_URL = 'http://madre-dam.atcloud.it/playlists/1.txt';
+const PLAYLIST_URL = 'http://madre-dam.atcloud.it/playlists/2.txt';
 const PLAYLIST_REFRESH_TIME = 1000 * 60;
 
 Filer = function(filesystem, container_name, video) {
@@ -13,10 +13,6 @@ Filer = function(filesystem, container_name, video) {
   this.filesystem = filesystem;
   this.video = video;
   this.downloader = new Downloader(filesystem, this);
-
-  // this.setupFiles();
-  // Se invocata senza parametri assume dei default ragionevoli
-
   // Adesso c'e' un unica playlist; contiene i prossimi files che
   // devo visualizzare.
   this.playList = new playList(this);

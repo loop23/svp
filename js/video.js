@@ -1,13 +1,15 @@
 // Controller dei video.
 Video = function(filesystem, container, filer) {
+  console.info("Video initializing with %o, %o, %o", filesystem, container, filer);
   this.filesystem = filesystem;
-  this.filer = filer;
   this.container = $(container);
+  this.filer = filer;
   var v = this.container;
-
-  v.addEventListener('error', function(e) {
-    console.log("[Video] - Errore playback per %o, reason %o", v.currentSrc, failed(e));
-    this.filer.deleteFile(v.currentSrc);
+  this.container.addEventListener('error', function(e) {
+    console.log("[Video] - Errore playback per %o, reason %o",
+		this.container.currentSrc,
+		failed(e));
+    this.filer.deleteFile(this.container.currentSrc);
     this.loadNext();
   }.bind(this));
 };
