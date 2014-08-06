@@ -4,27 +4,32 @@ Ha attributi:
   * remoteUrl
   * localFile
   * status (che puo' essere: PENDING || DOWNLOADING || DOWNLOADED || ERROR)
+  * title - Il titolo della traccia eventualmente da mostrare
 */
 
 // Constructor
 // Unica dipendenza per filer e' chiedergli se fileExistsLocally ;
 // forse converrebbe dipendere da playlist invece che da filer?
 // O addurittura da downloader? mi farebbe comodo iniziare qui i dl
-playlistItem = function(filer, remoteUrl, localFile) {
+playlistItem = function(filer, remoteUrl, localFile, title) {
   this.filer = filer;
   this.localFile = localFile;
+  this.title = title;
   if (localFile) {
     this.status = 'DOWNLOADED';
-    console.debug("Creato item via lf: %s", this);
+    console.debug("Creato item via localFile: %s", this);
     return;
   }
   this.remoteUrl = remoteUrl;
-  var md = remoteUrl.match(/.+\/(.+)\?(\d+)$/);
+  var md = remoteUrl.match(/.+\/(.+)$/);
   if (md) {
+    console.log("qui dentro md: %o", md);
     this.localFile = md[1];
     this.status = filer.fileExistsLocally(this.localFile) ? 'DOWNLOADED' : 'PENDING';
+    console.debug("Creato item via remoteUrl: %s", this.toString());
+  } else {
+      console.warn("new PlaylistItem confuso da %s, regexp non matcha", remoteUrl);
   }
-  console.debug("Creato item via remoteUrl: %s", this.toString())
 };
 
 playlistItem.prototype.ispending = function() {
@@ -57,5 +62,6 @@ playlistItem.prototype.finishDownload = function() {
 };
 
 playlistItem.prototype.toString = function() {
-  return "[PlaylistItem: " + this.localFile + ' - ' + this.status + ']';
+    return "[PlaylistItem: " + this.localFile + " - url: " + this.remoteUrl +
+	(this.title !== '' ? ('(' + this.title + ')') : '') + ' - ' + this.status + ']';
 };

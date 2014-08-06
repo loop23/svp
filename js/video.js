@@ -21,25 +21,37 @@ Video.prototype.open = function(item) {
 			       {},
 			       this.loadVideo.bind(this),
 			       error);
-}
+};
 
+// Sets up a callaback that calls video.play in 2 secs
 Video.prototype.loadVideo = function(entry) {
   console.log("[Video] loadVideo con entry %o", entry);
   var vd = $('#video');
+  var text = $('#video-cc');
+  text.innerHTML = entry.title;  
   vd.src = entry.toURL();
   vd.removeAttribute('controls');
   vd.pause();
   setTimeout(function() {
     vd.play();
     this.pausing = false;
-  }.bind(this), 2000)
+  }.bind(this), 2000);
 };
 
 Video.prototype.loadNext = function() {
-  var item = this.filer.getNext();
-  // console.log("[Video] loadNext, item tornato da filer: %o", item);
-  if (item) {
-    return this.open(item);
+  var item = window.filer.getNext();
+  var v = this;
+    if (item) {
+      console.log("[Video] loadNext, item tornato da filer: %o, mostro ads", item);
+      var myDiv = $('#video-overlay');
+      console.log('div %o', myDiv);
+      myDiv.style.display = 'block';
+      startAdvertising();
+      return setInterval(function() {
+	console.log("hiding ads and playing next");  
+	myDiv.style.display  = 'none' ;
+	v.open(item);
+      }, 500);
   } else {
     return false;
   }

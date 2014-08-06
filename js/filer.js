@@ -5,7 +5,7 @@
  */
 
 // In dev e' 2, in prod e' 1.. come gestirlo non lo so ancora.
-const PLAYLIST_URL = 'http://madre-dam.atcloud.it/playlists/2.txt';
+const PLAYLIST_URL = 'http://madre-r3.indemo.it/playlists/2.txte';
 const PLAYLIST_REFRESH_TIME = 1000 * 60;
 
 Filer = function(filesystem, container_name, video) {
@@ -72,7 +72,10 @@ Filer.prototype.clear_initial_cb = function() {
   } else {
     console.debug("[Filer] ...La tolgo davvero");
     window.clearInterval(this.initial_cb);
-    this.initial_cb = null;
+			this.initial_cb = null;
+			var myDiv = $('#video-overlay');
+			console.log('div %o', myDiv);
+			myDiv.style.display = 'none';
   }
 };
 

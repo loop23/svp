@@ -1,8 +1,8 @@
 {
   "name": "LocalVideo",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "manifest_version": 2,
-  "description": "Video Player with local filesystem - playlist version",
+  "description": "Video Player with local filesystem - playlist version; with advertisement",
   "icons": {
     "16": "img/icon-16.png",
     "24": "img/icon-24.png",
@@ -17,5 +17,10 @@
 		  // "syncFileSystem",
 		  "fullscreen",
 		  "http://madre-dam.atcloud.it/",
-		  "https://madre-dam.atcloud.it/" ]
+		  "https://madre-dam.atcloud.it/",
+		  "http://54.247.57.12/",
+		  "http://madre-r3.indemo.it/",
+		  "https://dam-museomadre.s3.amazonaws.com/",
+		  "http://s3-eu-west-1.amazonaws.com/"
+		 ]
 }

@@ -40,14 +40,14 @@ playList.prototype.parsePlaylistText = function(text) {
   console.debug("[Playlist] Before parsing,  old_files: %o", old_files);
   var new_items = [];
   text.split("\n").forEach(function(line) {
-    var md = line.match(/.+\/(.+)\?(\d+)$/);
+  var md = line.match(/(.+\/(.+))\|(.*?)$/);
+    // console.log("line: %s, md: %o", line, md);
     if (md) {
-      var url = md[0]; // Unused?
-      var filename = md[1];
-      var timestamp = md[2];
+      var url = md[1]; // Unused?
+      var filename = md[2];
+      var title = md[3];
       // Istanziare il pli triggera il controllo se e' gia presente su filer
-      var new_item = new playlistItem(this.filer, line);
-      new_items.push(new_item);
+	new_items.push(new playlistItem(this.filer, url, undefined, title));
     } else {
       if (line != '')
         console.warn("[Playlist] Linea non parsabile: %o", line);

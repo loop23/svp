@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   openSyncableFileSystem();
   registerKeyHandler();
+  startAdvertising();
 });
 
 // Apre il fs se puo'
@@ -49,4 +50,20 @@ function hideCursor() {
 
 function registerKeyHandler() {
   $('#body').addEventListener('keypress', keyHandler);
+}
+  
+function startAdvertising() {
+  console.log("Spe, ha src? %o", $('#video-overlay img'));
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET',
+	   "http://54.247.57.12/www/delivery/avw.php?zoneid=1&amp;n=24739e6",
+	   true);
+  xhr.responseType = 'blob';
+  xhr.onload = function(e) {
+    var img =   $('#video-overlay img');
+    img.src = window.URL.createObjectURL(this.response);
+    //document.body.appendChild(img);
+  };
+  xhr.send();
+  return false;
 }
