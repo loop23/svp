@@ -23,38 +23,48 @@ Video.prototype.open = function(item) {
 			       error);
 };
 
+Video.prototype.showTitle = function(entry) {
+  var text = $('#video-cc');
+  if (entry.title) {
+    text.innerHTML = entry.title;
+    setTimeout(function() { text.innerHTML = ''; }, 1000);
+  }
+};
+  
 // Sets up a callaback that calls video.play in 2 secs
 Video.prototype.loadVideo = function(entry) {
   console.log("[Video] loadVideo con entry %o", entry);
   var vd = $('#video');
-  var text = $('#video-cc');
-  text.innerHTML = entry.title;  
+  this.showTitle(entry);
   vd.src = entry.toURL();
   vd.removeAttribute('controls');
   vd.pause();
-  setTimeout(function() {
+  this.showAdvert();
+    window.setTimeout(function() {
     vd.play();
     this.pausing = false;
-  }.bind(this), 2000);
+  }.bind(this), 4000);
 };
 
+Video.prototype.showAdvert = function() {
+  startAdvertising();
+};
+ 
 Video.prototype.loadNext = function() {
-  var item = window.filer.getNext();
+  var entry = window.filer.getNext();
+  if (!entry) return false;
   var v = this;
-    if (item) {
-      console.log("[Video] loadNext, item tornato da filer: %o, mostro ads", item);
-      var myDiv = $('#video-overlay');
-      console.log('div %o', myDiv);
-      myDiv.style.display = 'block';
-      startAdvertising();
-      return setInterval(function() {
-	console.log("hiding ads and playing next");  
-	myDiv.style.display  = 'none' ;
-	v.open(item);
-      }, 500);
-  } else {
-    return false;
-  }
+  var overlay = $('#video-overlay');
+  console.log("[Video] loadNext, entry tornato da filer: %o, mostro ads", entry);
+  overlay.style.display = 'block';
+  $('#video').style.display = 'none';
+  this.showAdvert();
+  return setTimeout(function() {
+    console.log("hiding ads and playing next");  
+    overlay.style.display  = 'none' ;
+    $('#video').style.display = 'block';  
+    v.open(entry);
+  }, 5000);
 };
 
 Video.prototype.hasEnded = function() {
@@ -84,8 +94,8 @@ Video.prototype.setupCallbacks = function() {
     // console.log("Dentro cb veloce, pausing? %o", _me.pausing);
     if (_me.pausing)
       return;
-    // console.log("[Video - Vediamo se e' finito, me: %o", _me);
     if (_me.hasEnded()) {
+      console.log("[Video - Dice che e' ended quindi richiama loadNext");
       _me.pausing = true;
       _me.loadNext();
     }

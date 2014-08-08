@@ -11,7 +11,7 @@ function openSyncableFileSystem() {
     error("requestFileSystem unsupported");
     return;
   }
-  log('Obtaining local FileSystem; This sometimes takes a while...');
+  // log('Obtaining local FileSystem; This sometimes takes a while...');
   window.webkitRequestFileSystem(window.PERSISTENT,
 				 1024*1024*1024*30, // 30G
 				 onFileSystemOpened,
@@ -51,7 +51,7 @@ function hideCursor() {
 function registerKeyHandler() {
   $('#body').addEventListener('keypress', keyHandler);
 }
-  
+// Chiamata all'inizio per mostrare il primo cartello  
 function startAdvertising() {
   console.log("Spe, ha src? %o", $('#video-overlay img'));
   var xhr = new XMLHttpRequest();
@@ -60,8 +60,9 @@ function startAdvertising() {
 	   true);
   xhr.responseType = 'blob';
   xhr.onload = function(e) {
-    var img =   $('#video-overlay img');
+    var img = $('#video-overlay img');
     img.src = window.URL.createObjectURL(this.response);
+    window.setTimeout(function() {img.src = '';}, 2000);
     //document.body.appendChild(img);
   };
   xhr.send();

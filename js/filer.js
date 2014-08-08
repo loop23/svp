@@ -1,6 +1,6 @@
 /* This object evolved; it used to be the file list shown on the left hand
  * of the screen, is now more of a multi-playlist manager.
- * It gets initialized with a filesystem, parent container name and video
+ * It gets initialized with a filesystem, parent container name
  * object; Acts as main controller for the app.
  */
 
@@ -8,10 +8,9 @@
 const PLAYLIST_URL = 'http://madre-r3.indemo.it/playlists/2.txte';
 const PLAYLIST_REFRESH_TIME = 1000 * 60;
 
-Filer = function(filesystem, container_name, video) {
-  console.info("[Filer] - initializeing w/ %o, cn: %o, video el: %o", filesystem, container_name, video);
+Filer = function(filesystem, container_name) {
+  console.info("[Filer] - initializeing w/fs: %o, cn: %o", filesystem, container_name);
   this.filesystem = filesystem;
-  this.video = video;
   this.downloader = new Downloader(filesystem, this);
   // Adesso c'e' un unica playlist; contiene i prossimi files che
   // devo visualizzare.
@@ -46,9 +45,9 @@ Filer = function(filesystem, container_name, video) {
     console.debug("[Filer] Posso iniziare a playare?");
     if (this.playList.canPlay()) { // Can play
       console.debug("[Filer] Si! daje!");
-      this.video.loadNext();
+      window.video.loadNext();
       this.clear_initial_cb();
-      this.video.setupCallbacks();
+      window.video.setupCallbacks();
     } else {
       console.debug("[Filer] non posso iniziare a playare")
     }
