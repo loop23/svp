@@ -15,9 +15,9 @@ Video = function(filesystem, container, filer) {
 };
 
 // Apre il file locale in path e chiama loadVideo nella callback
-Video.prototype.open = function(item) {
-  console.log("[Video].open con: %o", item);
-  this.filesystem.root.getFile(item.localFile,
+Video.prototype.openPlItem = function(plItem) {
+  console.log("[Video].openPlItem con: %o", plItem);
+  this.filesystem.root.getFile(plItem.localFile,
 			       {},
 			       this.loadVideo.bind(this),
 			       error);
@@ -35,14 +35,17 @@ Video.prototype.showTitle = function(entry) {
 Video.prototype.loadVideo = function(fileEntry) {
   console.log("[Video] loadVideo con fileEntry %o", fileEntry);
   var vd = $('#video');
-  this.showTitle(fileEntry);
+  this.showTitle(fileEntry); // TODO - mi sa che fileEntry non ha title, plItem ce l'ha
   vd.src = fileEntry.toURL();
   vd.removeAttribute('controls');
   vd.pause();
   this.showAdvert();
-  setTimeout(function() {
-    vd.play();
-  }.bind(this), 4000);
+  window.setTimeout(function() {
+    console.log("hiding ads and playing");
+    $('#video-overlay').style.display  = 'none' ;
+    $('#video').style.display = 'block';  
+    $('#video').play();
+  }, 6000);
 };
 
 Video.prototype.showAdvert = function() {
@@ -63,15 +66,7 @@ Video.prototype.loadNext = function() {
   overlay.style.display = 'block';
   $('#video').style.display = 'none';
   console.log("opening new video in bg");
-  this.open(plItem);
-  $('#video').pause();
-  this.showAdvert();
-  window.setTimeout(function() {
-    console.log("hiding ads and playing");
-    overlay.style.display  = 'none' ;
-    $('#video').style.display = 'block';  
-    $('#video').play();
-  }, 6000);
+  this.openPlItem(plItem);
   return null;
 };
 
