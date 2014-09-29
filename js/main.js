@@ -63,6 +63,9 @@ function loadAdvert() {
     img.src = window.URL.createObjectURL(this.response);
     window.setTimeout(function() {img.src = '';}, 6000);
   };
+  xhr.onerror = function(e) {
+    console.error("Error retrieving advert!");    
+  };
   xhr.send();
   return false;
 }

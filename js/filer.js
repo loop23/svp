@@ -6,11 +6,11 @@
 
 // In dev e' 2, in prod e' 1.. come gestirlo non lo so ancora.
 const PLAYLIST_URL = 'http://madre-r3.indemo.it/playlists/2.txte';
-const ADSERVER_URL = "http://54.247.57.12/www/delivery/avw.php?zoneid=1&amp;n=24739e6";  
+const ADSERVER_URL = "http://54.247.57.12/www/delivery/avw.php?zoneid=1&amp;n=24739e6";
 const PLAYLIST_REFRESH_TIME = 1000 * 60;
 
 Filer = function(filesystem, container_name) {
-  console.info("[Filer] - initializeing w/fs: %o, cn: %o", filesystem, container_name);
+  console.info("[Filer] - initializing w/fs: %o, container_name: %o", filesystem, container_name);
   this.filesystem = filesystem;
   this.downloader = new Downloader(filesystem, this);
   // Adesso c'e' un unica playlist; contiene i prossimi files che
@@ -192,12 +192,13 @@ Filer.prototype.readLocalPlaylist = function() {
   }.bind(this), error);
 };
 
-// Cancella il file della playlist (se c'e') e cinque secondi dopo la riscarica
+// Cancella il file della playlist (se c'e') e dopo la riscarica.
+// Dovrebbe farlo solo se c'e' la connessione! TODO
 Filer.prototype.requestPlaylistDownload = function() {
   this.deleteFile('playlist');
   setTimeout(function() {
     this.downloader.downloadFile(PLAYLIST_URL,
-				 'playlist');
+  	   			 'playlist');
   }.bind(this), 100);
 };
 
@@ -226,4 +227,3 @@ Filer.prototype.notifyDownload = function(filename) {
 Filer.prototype.toString = function() {
   return("[Filer con pl:" + this.playList.toString() + ']');
 };
-

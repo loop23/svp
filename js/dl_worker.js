@@ -7,16 +7,16 @@ addEventListener('message', function(e) {
   switch (data.cmd) {
   case 'initialize':
     // Can we get that accross?
-    console.log("initializeing with: %o", data);
+    console.info("[dl_worker] - initializing with: %o", data);
     break;
   case 'stop':
-    ('WORKER STOPPED: ' + data.msg + '. (buttons will no longer work)');
+    console.info('[dl_worker] - WORKER STOPPED: ' + data.msg + '. (buttons will no longer work)');
     close(); // Terminates the worker.
     break;
   case 'download':
     postMessage('Dl requested to worker: ' + data.remoteUrl);
     r = dl.downloadFile(data.remoteUrl, data.localFile);
-    console.log("downloadFile torna %o", r);
+    console.debug("[dl_worker] - downloadFile torna %o", r);
     break;
   default:
     postMessage('Unknown command: ' + data.msg);
@@ -26,12 +26,12 @@ addEventListener('message', function(e) {
 
 // Apre il fs se puo'
 function openSyncableFileSystem() {
-  console.error("ofs in worker")
+  console.debug("[dl_worker] - ofs in worker");
   if (!window || !window.webkitRequestFileSystem) {
     error("requestFileSystem unsupported");
     return;
   }
-  log('Obtaining local FileSystem; This sometimes takes a while...');
+  console.info('[dl_worker] - Obtaining local FileSystem; This sometimes takes a while...');
   window.webkitRequestFileSystem(window.PERSISTENT,
 				 1024*1024*1024*30, // 30G
 				 onFileSystemOpened,
@@ -40,9 +40,8 @@ function openSyncableFileSystem() {
 
 // Invocata quando il sistema torna il fs, inizializza la app.
 function onFileSystemOpened(fs) {
-  console.error("fs opened in worker")
-  console.debug('Got FileSystem: %o', fs);
+  console.info('[dl_worker] - opened FileSystem: %o', fs);
   dl = new Downloader(fs);
-  console.log("Got dl? %o", dl);
+  console.debug("[dl_worker] - Got dl? %o", dl);
   postMessage('WORKER STARTED: ' + dl);
 }

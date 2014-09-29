@@ -14,7 +14,6 @@
     }
   },
   "permissions": ["unlimitedStorage",
-		  // "syncFileSystem",
 		  "fullscreen",
 		  "http://madre-dam.atcloud.it/",
 		  "https://madre-dam.atcloud.it/",
