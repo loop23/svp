@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   openSyncableFileSystem();
   registerKeyHandler();
-  startAdvertising();
+  loadAdvert();
 });
 
 // Apre il fs se puo'
@@ -52,7 +52,7 @@ function registerKeyHandler() {
   $('#body').addEventListener('keypress', keyHandler);
 }
 // Chiamata all'inizio per mostrare il primo cartello, e poi da Video.showAdvert
-function startAdvertising() {
+function loadAdvert() {
   var xhr = new XMLHttpRequest();
   xhr.open('GET',
            ADSERVER_URL,
@@ -62,7 +62,6 @@ function startAdvertising() {
     var img = $('#video-overlay img');
     img.src = window.URL.createObjectURL(this.response);
     window.setTimeout(function() {img.src = '';}, 6000);
-    //document.body.appendChild(img);
   };
   xhr.send();
   return false;

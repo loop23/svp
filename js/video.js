@@ -16,7 +16,7 @@ Video = function(filesystem, container, filer) {
 
 // Apre il file locale in path e chiama loadVideo nella callback
 Video.prototype.open = function(item) {
-  // console.log("[Video].open con: %o", item);
+  console.log("[Video].open con: %o", item);
   this.filesystem.root.getFile(item.localFile,
 			       {},
 			       this.loadVideo.bind(this),
@@ -32,67 +32,57 @@ Video.prototype.showTitle = function(entry) {
 };
   
 // Sets up a callaback that calls video.play in 2 secs
-Video.prototype.loadVideo = function(entry) {
-  console.log("[Video] loadVideo con entry %o", entry);
+Video.prototype.loadVideo = function(fileEntry) {
+  console.log("[Video] loadVideo con fileEntry %o", fileEntry);
   var vd = $('#video');
-  this.showTitle(entry);
-  vd.src = entry.toURL();
+  this.showTitle(fileEntry);
+  vd.src = fileEntry.toURL();
   vd.removeAttribute('controls');
   vd.pause();
   this.showAdvert();
-    window.setTimeout(function() {
+  setTimeout(function() {
     vd.play();
-    this.pausing = false;
   }.bind(this), 4000);
 };
 
 Video.prototype.showAdvert = function() {
-  startAdvertising();
+  loadAdvert();
 };
 
 Video.prototype.loadNext = function() {
-  var entry = window.filer.getNext();
-  if (!entry) return false;
-  var v = this;
-  var overlay = $('#video-overlay');
-  console.log("[Video] loadNext, entry tornato da filer: %o, mostro ads", entry);
-  overlay.style.display = 'block';
-  $('#video').style.display = 'none';
-  this.showAdvert();
-  return setTimeout(function() {
-    console.log("hiding ads and playing next");  
-    overlay.style.display  = 'none' ;
-    $('#video').style.display = 'block';  
-    v.open(entry);
-  }, 5000);
-};
-
-Video.prototype.hasEnded = function() {
-  var v = $('#video');
-  try {
-    if (v.ended) {
-      return true;
-    }
-    if (v.currentTime == v.duration) {
-      return true;
-    }
-    return false;
-  } catch (x) {
-    console.log("[Video] - Errore calcolando hasEnded, diciamo di no: %o, $('video').currentSrc: ", v.currentSrc);
+  var plItem = window.filer.getNext();
+  if (!plItem) { // Questo dovrebbe prevenire alcuni tipi di lockup?
+    setTimeout(function() {
+      this.loadNext();
+    }, 3000);
     return false;
   }
+  var v = this;
+  var overlay = $('#video-overlay');
+  console.log("[Video] loadNext, plItem tornato da filer: %o, mostro ads", plItem);
+  overlay.style.display = 'block';
+  $('#video').style.display = 'none';
+  console.log("opening new video in bg");
+  this.open(plItem);
+  $('#video').pause();
+  this.showAdvert();
+  window.setTimeout(function() {
+    console.log("hiding ads and playing");
+    overlay.style.display  = 'none' ;
+    $('#video').style.display = 'block';  
+    $('#video').play();
+  }, 6000);
+  return null;
 };
 
 // Solo dopo lo start iniziale, setto le callback
 // mie per continuare a playare
 Video.prototype.setupCallbacks = function() {
-  console.log("[Video] - setup della callback veloce");
-  var _me = this;
-  this.pausing = false;
+  console.debug("[Video] - setup della callback veloce");
   $('#video').onended = function() {
     console.log("ended!");
-    _me.loadNext();
-  };
+    this.loadNext();
+  }.bind(this);
 };
 
 function failed(e) {
