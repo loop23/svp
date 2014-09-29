@@ -51,18 +51,17 @@ function hideCursor() {
 function registerKeyHandler() {
   $('#body').addEventListener('keypress', keyHandler);
 }
-// Chiamata all'inizio per mostrare il primo cartello  
+// Chiamata all'inizio per mostrare il primo cartello, e poi da Video.showAdvert
 function startAdvertising() {
-  console.log("Spe, ha src? %o", $('#video-overlay img'));
   var xhr = new XMLHttpRequest();
   xhr.open('GET',
-	   "http://54.247.57.12/www/delivery/avw.php?zoneid=1&amp;n=24739e6",
+           ADSERVER_URL,
 	   true);
   xhr.responseType = 'blob';
   xhr.onload = function(e) {
     var img = $('#video-overlay img');
     img.src = window.URL.createObjectURL(this.response);
-    window.setTimeout(function() {img.src = '';}, 2000);
+    window.setTimeout(function() {img.src = '';}, 6000);
     //document.body.appendChild(img);
   };
   xhr.send();
