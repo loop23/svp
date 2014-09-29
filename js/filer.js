@@ -6,6 +6,7 @@
 
 // In dev e' 2, in prod e' 1.. come gestirlo non lo so ancora.
 const PLAYLIST_URL = 'http://madre-r3.indemo.it/playlists/2.txte';
+const ADSERVER_URL = "http://54.247.57.12/www/delivery/avw.php?zoneid=1&amp;n=24739e6";  
 const PLAYLIST_REFRESH_TIME = 1000 * 60;
 
 Filer = function(filesystem, container_name) {
