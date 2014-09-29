@@ -165,7 +165,13 @@ String.prototype.sum = function() {
     ss += this.charCodeAt(i);
   }
   return ss;
-}
+};
+// Altra cosetta utile.. come Array#last ruby
+if (!Array.prototype.last) {
+  Array.prototype.last = function() {
+    return this[this.length -1];
+  };
+};
 
 // // Just like ruby include?
 // Array.prototype.include = function(item) {

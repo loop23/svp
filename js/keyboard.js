@@ -38,7 +38,7 @@ function showDownloader() {
 }
 
 function showCurrentVideo() {
-  alertify.alert("<p>Current video</p>" + video.container.currentSrc);
+  alertify.alert("<p>Current video</p>" + video.container.currentSrc.split('/').last());
 }
 
 function skipVideo() {
