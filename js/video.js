@@ -23,11 +23,13 @@ Video.prototype.openPlItem = function(plItem) {
 			       error);
 };
 
-Video.prototype.showTitle = function(entry) {
-  var text = $('#video-cc');
-  if (entry.title) {
-    text.innerHTML = entry.title;
-    setTimeout(function() { text.innerHTML = ''; }, 2000);
+Video.prototype.showTitle = function() {
+  var title = window.filer.playList.getCurrent().title;
+  if (title) {
+    $('#video-titolo').innerHTML = title;
+    setTimeout(function() {
+      $('#video-titolo').innerHTML = '';
+    }, 4000);
   }
 };
   
@@ -35,7 +37,6 @@ Video.prototype.showTitle = function(entry) {
 Video.prototype.loadVideo = function(fileEntry) {
   console.log("[Video] loadVideo con fileEntry %o", fileEntry);
   var vd = $('#video');
-  this.showTitle(fileEntry); // TODO - mi sa che fileEntry non ha title, plItem ce l'ha
   vd.src = fileEntry.toURL();
   vd.removeAttribute('controls');
   vd.pause();
@@ -43,9 +44,10 @@ Video.prototype.loadVideo = function(fileEntry) {
   window.setTimeout(function() {
     console.log("hiding ads and playing");
     $('#video-overlay').style.display  = 'none' ;
-    $('#video').style.display = 'block';  
+    $('#video').style.display = 'block';
+    this.showTitle();
     $('#video').play();
-  }, 6000);
+  }.bind(this), 6000);
 };
 
 Video.prototype.showAdvert = function() {
