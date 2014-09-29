@@ -27,7 +27,7 @@ Video.prototype.showTitle = function(entry) {
   var text = $('#video-cc');
   if (entry.title) {
     text.innerHTML = entry.title;
-    setTimeout(function() { text.innerHTML = ''; }, 1000);
+    setTimeout(function() { text.innerHTML = ''; }, 2000);
   }
 };
   
@@ -49,7 +49,7 @@ Video.prototype.loadVideo = function(entry) {
 Video.prototype.showAdvert = function() {
   startAdvertising();
 };
- 
+
 Video.prototype.loadNext = function() {
   var entry = window.filer.getNext();
   if (!entry) return false;
@@ -89,18 +89,11 @@ Video.prototype.setupCallbacks = function() {
   console.log("[Video] - setup della callback veloce");
   var _me = this;
   this.pausing = false;
-  // Questa viene eseguita spesso, controlla se il video e' finito
-  setInterval(function() {
-    // console.log("Dentro cb veloce, pausing? %o", _me.pausing);
-    if (_me.pausing)
-      return;
-    if (_me.hasEnded()) {
-      console.log("[Video - Dice che e' ended quindi richiama loadNext");
-      _me.pausing = true;
-      _me.loadNext();
-    }
-  }, 100);
-}
+  $('#video').onended = function() {
+    console.log("ended!");
+    _me.loadNext();
+  };
+};
 
 function failed(e) {
  // video playback failed - show a message saying why
