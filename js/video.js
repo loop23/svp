@@ -33,7 +33,7 @@ Video.prototype.showTitle = function() {
   }
 };
   
-// Sets up a callaback that calls video.play in 2 secs
+// Sets up a callback that calls video.play in 2 secs
 Video.prototype.loadVideo = function(fileEntry) {
   console.log("[Video] loadVideo con fileEntry %o", fileEntry);
   var vd = $('#video');

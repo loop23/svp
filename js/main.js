@@ -1,8 +1,12 @@
+// In dev e' 2, in prod e' 1.. come gestirlo non lo so ancora.
+const PLAYLIST_URL = 'http://madre-r3.indemo.it/playlists/2.txte';
+const ADSERVER_URL = "http://54.247.57.12/www/delivery/avw.php?zoneid=1&amp;n=24739e6";
+const PLAYLIST_REFRESH_TIME = 1000 * 60;
+
 // Invocata quando il ciborio e' pronto
 document.addEventListener('DOMContentLoaded', function() {
   openSyncableFileSystem();
   registerKeyHandler();
-  loadAdvert();
 });
 
 // Apre il fs se puo'
@@ -34,11 +38,9 @@ function initWorker() {
   window.worker.addEventListener('message', function(e) {
     console.info("Received from worker: %o", e);
   }, false);
-  worker.postMessage({
+  window.worker.postMessage({
     'cmd': 'initialize',
     'fs': window.filesystem
-// Filer can't be serialized :(
-//    'filer': window.filer
   });
 }
 
@@ -50,22 +52,4 @@ function hideCursor() {
 
 function registerKeyHandler() {
   $('#body').addEventListener('keypress', keyHandler);
-}
-// Chiamata all'inizio per mostrare il primo cartello, e poi da Video.showAdvert
-function loadAdvert() {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET',
-           ADSERVER_URL,
-	   true);
-  xhr.responseType = 'blob';
-  xhr.onload = function(e) {
-    var img = $('#video-overlay img');
-    img.src = window.URL.createObjectURL(this.response);
-    window.setTimeout(function() {img.src = '';}, 6000);
-  };
-  xhr.onerror = function(e) {
-    console.error("Error retrieving advert!");    
-  };
-  xhr.send();
-  return false;
 }

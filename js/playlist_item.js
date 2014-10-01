@@ -23,12 +23,12 @@ playlistItem = function(filer, remoteUrl, localFile, title) {
   this.remoteUrl = remoteUrl;
   var md = remoteUrl.match(/.+\/(.+)$/);
   if (md) {
-    console.log("qui dentro md: %o", md);
+    console.debug("[PlaylistItem] - qui dentro md: %o", md);
     this.localFile = md[1];
     this.status = filer.fileExistsLocally(this.localFile) ? 'DOWNLOADED' : 'PENDING';
-    console.debug("Creato item via remoteUrl: %s", this.toString());
+    console.debug("[PlaylistItem] - Creato item via remoteUrl: %s", this.toString());
   } else {
-      console.warn("new PlaylistItem confuso da %s, regexp non matcha", remoteUrl);
+      console.warn("[PlaylistItem] - new PlaylistItem confuso da %s, regexp non matcha", remoteUrl);
   }
 };
 
@@ -43,7 +43,7 @@ playlistItem.prototype.tmpFile = function() {
 playlistItem.prototype.startDownload = function() {
   console.debug("[PlaylistItem] Invocata startDownload su %s", this.toString());
   if (this.status == 'DOWNLOADING')
-    console.warn("Attenzione, item %o era gia' DOWNLOADING!", this.localFile);
+    console.warn("[PlaylistItem] - Attenzione, item %o era gia' DOWNLOADING!", this.localFile);
   this.status = 'DOWNLOADING';
 };
 
@@ -56,8 +56,10 @@ playlistItem.prototype.isDownloadFinished = function() {
 };
 
 playlistItem.prototype.finishDownload = function() {
-  if (this.status == 'DOWNLOADED')
-    console.warn("Attenzione, item %o era gia' DOWNLOADED!", this.localFile);
+  if (this.status == 'DOWNLOADED') {
+    console.warn("[PlaylistItem] - Attenzione, item %o era gia' DOWNLOADED!",
+		 this.localFile);
+  }
   this.status = 'DOWNLOADED';
 };
 

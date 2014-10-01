@@ -4,11 +4,6 @@
  * object; Acts as main controller for the app.
  */
 
-// In dev e' 2, in prod e' 1.. come gestirlo non lo so ancora.
-const PLAYLIST_URL = 'http://madre-r3.indemo.it/playlists/2.txte';
-const ADSERVER_URL = "http://54.247.57.12/www/delivery/avw.php?zoneid=1&amp;n=24739e6";
-const PLAYLIST_REFRESH_TIME = 1000 * 60;
-
 Filer = function(filesystem, container_name) {
   console.info("[Filer] - initializing w/fs: %o, container_name: %o", filesystem, container_name);
   this.filesystem = filesystem;
@@ -50,7 +45,7 @@ Filer = function(filesystem, container_name) {
       this.clear_initial_cb();
       window.video.setupCallbacks();
     } else {
-      console.debug("[Filer] non posso iniziare a playare")
+      console.debug("[Filer] non posso iniziare a playare");
     }
   }.bind(this), 1000 * 5);
 
