@@ -188,13 +188,20 @@ Filer.prototype.readLocalPlaylist = function() {
 };
 
 // Cancella il file della playlist (se c'e') e dopo la riscarica.
-// Dovrebbe farlo solo se c'e' la connessione! TODO
 Filer.prototype.requestPlaylistDownload = function() {
-  this.deleteFile('playlist');
-  setTimeout(function() {
-    this.downloader.downloadFile(PLAYLIST_URL,
-  	   			 'playlist');
-  }.bind(this), 100);
+  var xhr = new XMLHttpRequest();
+  xhr.open('HEAD',
+	   PLAYLIST_URL,
+	   true);
+  xhr.onload = function() {
+    this.deleteFile('playlist');
+    setTimeout(function() {
+      this.downloader.downloadFile(PLAYLIST_URL,
+  	   			   'playlist');
+    }.bind(this), 100);
+  };
+  xhr.send();
+  return true;
 };
 
 // Chiaramente, elimina un file; Se ha successo lo elimina dalla playList

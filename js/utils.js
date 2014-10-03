@@ -120,7 +120,6 @@ function simulatedClick(target, op) {
   target.dispatchEvent(event);
 }
 
-
 MediaError.prototype.toString = function mets() {
     var msg = '';
     switch (this.code) {

@@ -3,8 +3,9 @@
 // piu' perche' altrove gestiamo il fatto di mettere in front
 // o in background la sua div; qui la settiamo e basta.
 
-// Salviamo le vecchie request in advertCache per ETag
-
+// Salviamo le vecchie request in advertCache per ETag;
+// Probabilmente sarebbe meglio salvarle su disco, cosi'
+// permarrebbero anche fra gli startup, ma non so se ho tempo.
 var advertCache = {};
 
 function loadAdvert() {
