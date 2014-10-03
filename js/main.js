@@ -3,8 +3,19 @@ const PLAYLIST_URL = 'http://madre-r3.indemo.it/playlists/2.txte';
 const ADSERVER_URL = "http://54.247.57.12/www/delivery/avw.php?zoneid=1&amp;n=24739e6";
 const PLAYLIST_REFRESH_TIME = 1000 * 60;
 
+
+function loadFont() {
+  var styleNode           = document.createElement("style");
+  styleNode.type          = "text/css";
+  styleNode.textContent   = "@font-face { font-family: \"MyriadProReg\"; src: url('"
+    + chrome.runtime.getURL("css/MYRIADPROREGULAR.woff")
+    + "'); }";
+  document.head.appendChild(styleNode);
+}
+
 // Invocata quando il ciborio e' pronto
 document.addEventListener('DOMContentLoaded', function() {
+  loadFont();
   openSyncableFileSystem();
   registerKeyHandler();
 });
