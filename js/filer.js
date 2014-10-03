@@ -59,18 +59,18 @@ Filer = function(filesystem, container_name) {
   console.info("[Filer] Initialized!");
 };
 
+// All'inizio si deve usare una cb diversa da video.ended (perche' prima del play del primo video,
+// questa non verrebbe invocata!) - questa funzione elimina la cb iniziale.
 Filer.prototype.clear_initial_cb = function() {
-  console.debug("[Filer].clear_initial_cb");
+  console.info("[Filer].clear_initial_cb");
   if (this.initial_cb == null) {
     console.warn("[Filer] ...Ma gia' la tolsi");
     return;
   } else {
     console.debug("[Filer] ...La tolgo davvero");
     window.clearInterval(this.initial_cb);
-			this.initial_cb = null;
-			var myDiv = $('#video-overlay');
-			console.log('div %o', myDiv);
-			myDiv.style.display = 'none';
+    this.initial_cb = null;
+    $('#video-overlay').style.display = 'none';
   }
 };
 
@@ -81,7 +81,7 @@ Filer.prototype.getNext = function() {
 
 // List (della root); Invocata allo startup
 Filer.prototype.listDir = function(dir) {
-  console.debug("[Filer] Invocata list per dir '%s'", dir.fullPath);
+  console.info("[Filer] Invocata list per dir '%s'", dir.fullPath);
   var node = this.getListNode(dir.fullPath);
   if (node.fetching) // Already fetching
     return;
@@ -93,7 +93,7 @@ Filer.prototype.listDir = function(dir) {
 // Invocata quando si e' finito di leggere le entries (ls)
 // Dovrebbe capitare solo allo startup?
 Filer.prototype.didReadEntries = function(dir, reader, entries) {
-  console.debug("[Filer] didReadEntries con %i entries", entries.length)
+  console.debug("[Filer] didReadEntries con %i entries", entries.length);
   var node = this.getListNode(dir.fullPath);
   if (!entries.length) {
     node.fetching = false;
@@ -131,7 +131,7 @@ Filer.prototype.addFile = function(fileEntry) {
     console.warn("[Filer] Aggiunto file inutile (che non verra' playato perche' non corrisponde a nulla che io conosca) - lo elimino: %o",
 		fileEntry.name);
     fileEntry.remove(function() {
-      console.debug("[Filer] Eliminato file inutile!");
+      console.info("[Filer] Eliminato file inutile!");
     });
   }
 };
@@ -148,10 +148,7 @@ Filer.prototype.addFileByName = function(filename) {
 
 // Controlla se un file col nome filename e' stato scaricato; Controlla su localFiles
 Filer.prototype.fileExistsLocally = function(filename) {
-  // console.debug("[Filer] - controllo se %o esiste", filename);
-  var do_you = this.localFiles.some(function(e) { return e == filename });
-  // console.debug("[Filer].fileExistsLocally per %o torna: %o", filename, do_you);
-  return do_you;
+  return this.localFiles.some(function(e) { return e == filename; });
 };
 
 Filer.prototype.deleteRemoved = function(delenda) {
@@ -189,33 +186,44 @@ Filer.prototype.readLocalPlaylist = function() {
 
 // Cancella il file della playlist (se c'e') e dopo la riscarica.
 Filer.prototype.requestPlaylistDownload = function() {
+  console.debug("[Filer] - Requesting pl download");
   var xhr = new XMLHttpRequest();
   xhr.open('HEAD',
 	   PLAYLIST_URL,
 	   true);
   xhr.onload = function() {
-    this.deleteFile('playlist');
-    setTimeout(function() {
+    this.deleteFile('playlist', function() {
       this.downloader.downloadFile(PLAYLIST_URL,
   	   			   'playlist');
-    }.bind(this), 100);
-  };
+    });
+  }.bind(this);
   xhr.send();
   return true;
 };
 
-// Chiaramente, elimina un file; Se ha successo lo elimina dalla playList
-Filer.prototype.deleteFile = function(filename) {
+// Chiaramente, elimina un file; Se ha successo lo elimina dalla playList;
+// cb se passata viene eseguita sia in caso di successo che di fallimento
+// della delete (se remove fallisce, in linea di massima vuol dire che
+// il file non esisteva, e capita solo con la playlist)
+Filer.prototype.deleteFile = function(filename, cb) {
   console.debug("[Filer].deleteFile con filename: %o", filename);
   this.filesystem.root.getFile(filename,
-			      { create: false },
-			      function(fileEntry) {
-    fileEntry.remove(function() {
-      // console.debug("[Filer].deleteFile, dentro fileEntry.remove... chi e' this? %o", this);
-      this.localFiles = this.localFiles.filter(function(e) { return e != filename; });
-      console.debug("[Filer] Rimosso %o da localFiles", filename);
-    }.bind(this));
-  }.bind(this));
+			       { create: false },
+			       function(fileEntry) {
+				 fileEntry.remove(function() {
+				   this.localFiles = this.localFiles.filter(function(e) {
+				     return e != filename;
+				   });
+				   console.debug("[Filer] Rimosso %o da localFiles, invoco cb", filename);
+				   if (cb) {
+				     cb.call(this);
+				   }
+				 }.bind(this));
+			       }.bind(this),
+			       function() { // error opening file
+				 if (cb) {
+				   cb.call(this);
+				 }}.bind(this));
 };
 
 // Invocata quando il downloader ha finito di scaricare filename

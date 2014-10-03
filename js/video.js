@@ -6,7 +6,7 @@ Video = function(filesystem, container, filer) {
   this.filer = filer;
   var v = this.container;
   this.container.addEventListener('error', function(e) {
-    console.log("[Video] - Errore playback per %o, reason %o",
+    console.warn("[Video] - Errore playback per %o, reason %o",
 		this.container.currentSrc,
 		failed(e));
     this.filer.deleteFile(this.container.currentSrc);
@@ -16,7 +16,7 @@ Video = function(filesystem, container, filer) {
 
 // Apre il file locale in path e chiama loadVideo nella callback
 Video.prototype.openPlItem = function(plItem) {
-  console.log("[Video].openPlItem con: %o", plItem);
+  console.debug("[Video].openPlItem con: %o", plItem);
   this.filesystem.root.getFile(plItem.localFile,
 			       {},
 			       this.loadVideo.bind(this),
@@ -35,14 +35,14 @@ Video.prototype.showTitle = function() {
   
 // Sets up a callback that calls video.play in 2 secs
 Video.prototype.loadVideo = function(fileEntry) {
-  console.log("[Video] loadVideo con fileEntry %o", fileEntry);
+  console.debug("[Video] loadVideo con fileEntry %o", fileEntry);
   var vd = $('#video');
   vd.src = fileEntry.toURL();
   vd.removeAttribute('controls');
   vd.pause();
   this.showAdvert();
   window.setTimeout(function() {
-    console.log("hiding ads and playing");
+    console.debug("hiding ads and playing");
     $('#video-overlay').style.display  = 'none' ;
     $('#video').style.display = 'block';
     this.showTitle();
@@ -64,10 +64,10 @@ Video.prototype.loadNext = function() {
   }
   var v = this;
   var overlay = $('#video-overlay');
-  console.log("[Video] loadNext, plItem tornato da filer: %o, mostro ads", plItem);
+  console.debug("[Video] loadNext, plItem tornato da filer: %o, mostro ads", plItem);
   overlay.style.display = 'block';
   $('#video').style.display = 'none';
-  console.log("opening new video in bg");
+  console.debug("opening new video in bg");
   this.openPlItem(plItem);
   return null;
 };
@@ -75,9 +75,8 @@ Video.prototype.loadNext = function() {
 // Solo dopo lo start iniziale, setto le callback
 // mie per continuare a playare
 Video.prototype.setupCallbacks = function() {
-  console.debug("[Video] - setup della callback veloce");
+  console.info("[Video] - setup della callback veloce");
   $('#video').onended = function() {
-    console.log("ended!");
     this.loadNext();
   }.bind(this);
 };
