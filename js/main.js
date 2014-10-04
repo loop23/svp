@@ -37,7 +37,7 @@ function openSyncableFileSystem() {
 function onFileSystemOpened(fs) {
   console.info('Got FileSystem: %o', fs);
   window.video = new Video(fs, '#video');
-  window.filer = new Filer(fs, '#filer', window.video);
+  window.mainController = new MainController(fs, '#filer', window.video);
   hideCursor();
   initWorker();
 }

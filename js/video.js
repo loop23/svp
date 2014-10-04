@@ -1,15 +1,14 @@
 // Controller dei video.
-Video = function(filesystem, container, filer) {
-  console.info("Video initializing with %o, %o, %o", filesystem, container, filer);
+Video = function(filesystem, container) {
+  console.info("Video initializing with %o, %o, %o", filesystem, container);
   this.filesystem = filesystem;
   this.container = $(container);
-  this.filer = filer;
   var v = this.container;
   this.container.addEventListener('error', function(e) {
     console.warn("[Video] - Errore playback per %o, reason %o",
 		this.container.currentSrc,
 		failed(e));
-    this.filer.deleteFile(this.container.currentSrc);
+    window.mainController.deleteFile(this.container.currentSrc);
     this.loadNext();
   }.bind(this));
 };
@@ -24,7 +23,7 @@ Video.prototype.openPlItem = function(plItem) {
 };
 
 Video.prototype.showTitle = function() {
-  var title = window.filer.playList.getCurrent().title;
+  var title = window.mainController.playList.getCurrent().title;
   if (title) {
     $('#video-titolo').innerHTML = title;
     setTimeout(function() {
@@ -55,7 +54,7 @@ Video.prototype.showAdvert = function() {
 };
 
 Video.prototype.loadNext = function() {
-  var plItem = window.filer.getNext();
+  var plItem = window.mainController.getNext();
   if (!plItem) { // Questo dovrebbe prevenire alcuni tipi di lockup?
     setTimeout(function() {
       this.loadNext();
@@ -64,7 +63,7 @@ Video.prototype.loadNext = function() {
   }
   var v = this;
   var overlay = $('#video-overlay');
-  console.debug("[Video] loadNext, plItem tornato da filer: %o, mostro ads", plItem);
+  console.debug("[Video] loadNext, plItem tornato da mainController: %o, mostro ads", plItem);
   overlay.style.display = 'block';
   $('#video').style.display = 'none';
   console.debug("opening new video in bg");

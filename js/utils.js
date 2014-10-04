@@ -216,12 +216,3 @@ Array.prototype.difference = function(a2) {
 //   return tmp;
 // };
 
-// Filer.prototype.formatSize = function(size) {
-//   var unit = 0;
-//   while (size > 1024 && unit < 5) {
-//     size /= 1024;
-//     unit++;
-//   }
-//   size = Math.floor(size);
-//   return size + ' ' + ['', 'K', 'M', 'G', 'T'][unit] + 'B';
-// };

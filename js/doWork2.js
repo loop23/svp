@@ -8,7 +8,7 @@ addEventListener('message', function(e) {
   var data = e.data;
   switch (data.cmd) {
     case 'initialize':
-      downloader = new Downloader(data.fs, data.filer);
+      downloader = new Downloader(data.fs);
       break;
     case 'download':
       dl.downloadFile(data.url, data.filename);

@@ -1,15 +1,14 @@
 /*
 This object downloads files, trying to be smart about it.
-It is initialized with a filesystem and a filer; Uses XMLHttpRequest to
+It is initialized with a filesystem; Uses XMLHttpRequest to
 fetch files, and does so in 16M chunks; Gets 6 files concurrently at most;
 TODO: Should be made into a js worker to improve performance.
 */
 
 const CHUNK_SIZE = 1024 * 1024 * 16; // 16M
 
-Downloader = function(filesystem, filer) {
+Downloader = function(filesystem) {
   this.filesystem = filesystem;
-  this.filer = filer;
   // These two would make more sense if they were just string arrays i think :(
   // Being items ties into details I don't need to know.
   // At the beginning it's empty.
@@ -264,10 +263,10 @@ Downloader.prototype.saveResponseToFile = function(response, filename) {
       fileWriter.onwriteend = function(e) {
 	this.finished(filename);
 	if (filename == 'playlist') {
-	  console.debug("[Downloader] Siccome era playlist la parso!")
+	  console.debug("[Downloader] Siccome era playlist la parso!");
 	  var reader = new FileReader();
 	  reader.addEventListener('loadend', function() {
-	    this.filer.deleteRemoved(this.filer.playList.parsePlaylistText(reader.result));
+	    window.mainController.deleteRemoved(window.mainController.playList.parsePlaylistText(reader.result));
 	  }.bind(this));
 	  reader.readAsText(response);
 	  return;
@@ -284,8 +283,8 @@ Downloader.prototype.finished = function(filename) {
   console.debug("[Downloader].finished per %o", filename);
   // Tolgo dalla mia idea di dls in progress
   this.inProgress.delete(filename);
-  // E notifico il filer
-  this.filer.notifyDownload(filename);
+  // E notifico il mainController
+  window.mainController.notifyDownload(filename);
   // E vedo se scodare qualcosa
   this.dequeue();
 }

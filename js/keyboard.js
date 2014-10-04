@@ -30,11 +30,11 @@ function keyHandler(e) {
 };
 
 function showPlaylist() {
-  alertify.alert("<p>Playlist</p>" + filer.playList.asHtmlList());
+  alertify.alert("<p>Playlist</p>" + window.mainController.playList.asHtmlList());
 }
 
 function showDownloader() {
-  alertify.alert(filer.downloader.toString());
+  alertify.alert(window.mainController.downloader.toString());
 }
 
 function showCurrentVideo() {
@@ -47,6 +47,6 @@ function skipVideo() {
 }
 
 function loadPlaylist() {
-  filer.requestPlaylistDownload();
+  window.mainController.requestPlaylistDownload();
 }
 

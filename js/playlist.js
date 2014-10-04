@@ -1,8 +1,7 @@
 // Playlist holds an array of items
 
 // Constructor
-playList = function(filer) {
-  this.filer = filer;
+playList = function() {
   this.current = -1;
   this.items = [];
   this.lastSum = -1;
@@ -46,8 +45,8 @@ playList.prototype.parsePlaylistText = function(text) {
       var url = md[1]; // Unused?
       var filename = md[2];
       var title = md[3];
-      // Istanziare il pli triggera il controllo se e' gia presente su filer
-	new_items.push(new playlistItem(this.filer, url, undefined, title));
+      // Istanziare il pli triggera il controllo se e' gia presente
+      new_items.push(new playlistItem(url, undefined, title));
     } else {
       if (line != '')
         console.warn("[Playlist] Linea non parsabile: %o", line);
@@ -70,7 +69,7 @@ playList.prototype.downloadMissing = function() {
   this.items.forEach(function(item) {
     if (item.ispending()) {
       console.debug("dlmiss, %s was pending, downloading it", item.toString());
-      this.filer.downloader.downloadPlaylistItem(item);
+      window.mainController.downloader.downloadPlaylistItem(item);
     } else {
       ;
     }

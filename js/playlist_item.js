@@ -8,11 +8,8 @@ Ha attributi:
 */
 
 // Constructor
-// Unica dipendenza per filer e' chiedergli se fileExistsLocally ;
-// forse converrebbe dipendere da playlist invece che da filer?
 // O addurittura da downloader? mi farebbe comodo iniziare qui i dl
-playlistItem = function(filer, remoteUrl, localFile, title) {
-  this.filer = filer;
+playlistItem = function(remoteUrl, localFile, title) {
   this.localFile = localFile;
   this.title = title;
   if (localFile) {
@@ -25,7 +22,7 @@ playlistItem = function(filer, remoteUrl, localFile, title) {
   if (md) {
     console.debug("[PlaylistItem] - qui dentro md: %o", md);
     this.localFile = md[1];
-    this.status = filer.fileExistsLocally(this.localFile) ? 'DOWNLOADED' : 'PENDING';
+    this.status = window.mainController.fileExistsLocally(this.localFile) ? 'DOWNLOADED' : 'PENDING';
     console.debug("[PlaylistItem] - Creato item via remoteUrl: %s", this.toString());
   } else {
       console.warn("[PlaylistItem] - new PlaylistItem confuso da %s, regexp non matcha", remoteUrl);
