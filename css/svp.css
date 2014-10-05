@@ -4,8 +4,11 @@
 }
 
 body {
-  color: #000;
-  background: #fcdf2d;
+    color: #fef;
+/* Used to flash!
+    background: #fcdf2d;
+*/
+    background: #000;
 }
 
 .hide {
@@ -17,7 +20,6 @@ body {
   font-size: 12px;
   clear: both;
 }
-
 .error {
   color: #f00;
   font-weight: bold;
@@ -32,32 +34,13 @@ body {
   padding: 3px;
 }
 
-.button, .fs-button {
+.button {
   -webkit-border-radius:3px;
   padding: 1px 4px;
   margin: 2px 4px;
   border: solid 1px #ccc;
-}
-
-.fs-button {
-  font-size: 13px;
-  background: #acf;
-}
-
-.fs-button.selected {
-  color: white;
-  background: #009;
-}
-
-.fs-button:hover {
-  color: white;
-  background: #009;
-}
-
-.button {
   background: #eee;
 }
-
 .button:hover {
   background: #fb9;
 }
@@ -70,6 +53,7 @@ body {
    position: absolute;
    top: 0;
    left: 0;
+   z-index: 0;
 }
 
 #video-titolo {
@@ -97,10 +81,4 @@ body {
   color: #666;
   font-weight: bold;
   font-size: 13px;
-}
-
-.playlist {
-  font-size: 0.7em;
-  overflow-y: scroll;
-  overflow-x: hidden;
 }

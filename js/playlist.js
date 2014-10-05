@@ -9,7 +9,7 @@ playList = function() {
 
 // Proper pl management: getNext and getCurrent
 playList.prototype.getNext = function() {
-  this.current += 1;
+  this.current++;
   if (this.current >= this.items.length)
     this.current = 0;
   // console.debug("[Playlist] GetNext su %s ha indice a %i", this, this.current);

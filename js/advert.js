@@ -8,6 +8,12 @@
 // permarrebbero anche fra gli startup, ma non so se ho tempo.
 var advertCache = {};
 
+function displayAdvert() {
+  $('#video-overlay').style.display = 'block';
+  window.setTimeout(window.mainController.getNext.bind(window.mainController),
+						       ADVERT_TIMEOUT);
+}
+
 function loadAdvert() {
   var xhr = new XMLHttpRequest();
   xhr.open('GET',
@@ -15,15 +21,18 @@ function loadAdvert() {
 	   true);
   xhr.responseType = 'blob';
   xhr.onload = function() {
+    console.log("Loaded an advert! cool! loading but not quite displaying it");
     advertCache[this.getResponseHeader('ETag')] =
-		$('#video-overlay img').src =
-		window.URL.createObjectURL(this.response);
+      $('#video-overlay img').src =
+      window.URL.createObjectURL(this.response);
+    displayAdvert();
   };
   xhr.onerror = function() {
     console.error("Error retrieving advert - displaying a random old one!");
     var ka = Object.keys(advertCache);
     var idx = Math.floor(Math.random() * ka.length);
     $('#video-overlay img').src = advertCache[ka[idx]];
+    displayAdvert();
   };
   xhr.send();
   return true;

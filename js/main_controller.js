@@ -14,17 +14,31 @@ MainController = function(filesystem) {
   this.localFiles = [];
 
   // Stiamo leggendo la dir? in genere no!
-  var readingRoot = false;
+  this.readingRoot = false;
 
   this.playList = new playList(this);
   this.listDir(this.filesystem.root);
 
+  // L'ordine delle cose da playare
+  this.playoutOrder = ['Video', 'Video', 'Advert'];
+  this.playoutOrderIndex = 0;
+  this.currentPlayoutItem = function() {
+    return this.playoutOrder[this.playoutOrderIndex];
+  },
+  this.nextPlayoutItem = function() {
+    this.playoutOrderIndex++;
+    if (this.playoutOrderIndex >= this.playoutOrder.length) {
+      this.playoutOrderIndex = 0;
+    }
+  };
+
+  // Ti voglio eliminare!
   this.initial_cb = setInterval(function() {
     console.debug("[MainController] Posso iniziare a playare?");
     if (this.playList.canPlay()) { // Can play
-      console.debug("[MainController] Si! daje!");
-      window.video.loadNext();
+      console.debug("[MainController] playList dice di si, quindi provo!");
       this.clear_initial_cb();
+      this.getNext();
       window.video.setupCallbacks();
     } else {
       console.debug("[MainController] non posso iniziare a playare");
@@ -53,12 +67,25 @@ MainController.prototype.clear_initial_cb = function() {
     console.debug("[MainController] ...La tolgo davvero");
     window.clearInterval(this.initial_cb);
     this.initial_cb = null;
-    $('#video-overlay').style.display = 'none';
+    $('#video').poster='';
   }
 };
 
+// Invocata tramite cb, torna la prossima cosa da mostrare
 MainController.prototype.getNext = function() {
-  return this.playList.getNext();
+  console.debug("mc.getNext in this? %o", this);
+  switch (this.currentPlayoutItem()) {
+  case 'Video': // playList.getNext non puo' tornare undefined, senno' si ferma tutto!
+    window.video.openPlItem(this.playList.getNext());
+    break;
+  case 'Advert':
+    loadAdvert();
+    break;
+  case 'VideoAdvert':
+    break;
+  }
+  this.nextPlayoutItem();
+  return undefined;
 };
 
 // List (della root); Invocata allo startup
