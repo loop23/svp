@@ -1,8 +1,8 @@
 {
   "name": "LocalVideo",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "manifest_version": 2,
-  "description": "Video Player with local filesystem - playlist version; with advertisement; With some advert caching, checks for playlist before downloading it",
+  "description": "Video Player with local filesystem - playlist version; with advertisement; With some advert caching, checks for playlist before downloading it; does refresh playout order from server",
   "icons": {
     "16": "img/icon-16.png",
     "24": "img/icon-24.png",

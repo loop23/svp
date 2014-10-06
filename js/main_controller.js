@@ -31,6 +31,16 @@ MainController = function(filesystem) {
       this.playoutOrderIndex = 0;
     }
   };
+  // takes new playoutorder and returns true if has swapped bcs different
+  this.swapPlayoutOrder = function(newOrder) {
+    if (JSON.stringify(this.playoutOrder)==JSON.stringify(newOrder)) {
+      return false;
+    }
+    console.info("Swapping playout order with %o", newOrder);
+    this.playoutOrder = newOrder;
+    this.playoutOrderIndex = 0;
+    return true;
+  },
 
   // Ti voglio eliminare!
   this.initial_cb = setInterval(function() {
@@ -50,7 +60,12 @@ MainController = function(filesystem) {
     this.requestPlaylistDownload();
   }.bind(this), PLAYLIST_REFRESH_TIME);
 
-  // Done!
+  // E Ogni x provo a ricaricare il playoutOrder
+  this.plOrderRefreshTask = setInterval(function() {
+    this.requestPlayoutOrderDownload();
+  }.bind(this), PLAYOUT_REFRESH_TIME);
+
+    // Done!
   this.requestPlaylistDownload();
   console.info("[MainController] Initialized!");
 };
@@ -73,7 +88,6 @@ MainController.prototype.clear_initial_cb = function() {
 
 // Invocata tramite cb, torna la prossima cosa da mostrare
 MainController.prototype.getNext = function() {
-  console.debug("mc.getNext in this? %o", this);
   switch (this.currentPlayoutItem()) {
   case 'Video': // playList.getNext non puo' tornare undefined, senno' si ferma tutto!
     window.video.openPlItem(this.playList.getNext());
@@ -83,6 +97,11 @@ MainController.prototype.getNext = function() {
     break;
   case 'VideoAdvert':
     break;
+  case 'OverlayAdvert':
+    break;
+  default:
+    console.warn("current playout item is not recognized: %o",
+		 this.currentPlayoutItem());
   }
   this.nextPlayoutItem();
   return undefined;
@@ -207,6 +226,29 @@ MainController.prototype.requestPlaylistDownload = function() {
   xhr.send();
   return true;
 };
+
+MainController.prototype.requestPlayoutOrderDownload = function() {
+  console.debug("[MainController] - Requesting playout order download");
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET',
+	   PLAYOUT_URL,
+	   true);
+  xhr.onload = function(e) {
+    if (e.target.status != 200) {
+      console.debug("can't get to playout, resp: %o", e.target);
+      return false;
+    }
+    var newPlOrder = JSON.parse(xhr.responseText);
+    if (! newPlOrder instanceof Array) {
+      console.warn("new playout is not array, ignoring: %o", newPlOrder);
+    } else {
+      this.swapPlayoutOrder(newPlOrder);
+    }
+    return false;
+  }.bind(this);
+  xhr.send();
+  return true;
+}
 
 // Chiaramente, elimina un file; Se ha successo lo elimina dalla playList;
 // cb se passata viene eseguita sia in caso di successo che di fallimento
