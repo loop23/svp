@@ -34,6 +34,14 @@ Video.prototype.loadVideo = function(fileEntry) {
   $('#video-overlay').style.display = 'none';
 };
 
+// loads a video from a url - to be used by VideoAdvert
+Video.prototype.loadUrl = function(url) {
+  console.debug("[Video] - loading from url: %s", url);
+  this.container.src = url;
+  this.container.play();
+  $('#video-overlay').style.display = 'none';
+},
+
 // Displays title and clear it after a while
 Video.prototype.showTitle = function() {
   if (this.title) {

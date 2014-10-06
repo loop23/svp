@@ -20,7 +20,7 @@ MainController = function(filesystem) {
   this.listDir(this.filesystem.root);
 
   // L'ordine delle cose da playare
-  this.playoutOrder = ['Video', 'Video', 'Advert'];
+  this.playoutOrder = ['Video', 'Advert', 'Video', 'VideoAdvert'];
   this.playoutOrderIndex = 0;
   this.currentPlayoutItem = function() {
     return this.playoutOrder[this.playoutOrderIndex];
@@ -96,7 +96,7 @@ MainController.prototype.getNext = function() {
     loadAdvert();
     break;
   case 'VideoAdvert':
-    break;
+    this.loadVideoAdvert();
   case 'OverlayAdvert':
     break;
   default:
@@ -105,6 +105,25 @@ MainController.prototype.getNext = function() {
   }
   this.nextPlayoutItem();
   return undefined;
+};
+
+MainController.prototype.loadVideoAdvert = function() {
+  console.debug("[MainController] - Requesting a video advert");
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET',
+	   VIDEOADSERVER_URL,
+	   true);
+  xhr.onload = function(e) {
+    if (e.target.status != 200) {
+      console.debug("can't get to video, resp: %o", e.target);
+      return false;
+    }
+    var videourl = xhr.responseText.match(/(https[^\]]+)/m)[1];
+    window.video.loadUrl(videourl);
+    return false;
+  }.bind(this);
+  xhr.send();
+  return true;
 };
 
 // List (della root); Invocata allo startup

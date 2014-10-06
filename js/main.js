@@ -1,6 +1,7 @@
 // In dev e' 2, in prod e' 1.. come gestirlo non lo so ancora.
-const PLAYLIST_URL = 'http://madre-r3.indemo.it/playlists/2.txte';
+const PLAYLIST_URL = 'http://madre-r3.indemo.it/playlists/1.txte';
 const ADSERVER_URL = "http://54.247.57.12/www/delivery/avw.php?zoneid=1&amp;n=24739e6";
+const VIDEOADSERVER_URL = "http://54.247.57.12/www/delivery/fc.php?script=bannerTypeHtml:vastInlineBannerTypeHtml:vastInlineHtml&zones=pre-roll0-0%3D2&nz=1&source=&r=R0.023106331005692482&block=1&format=vast&charset=UTF-8";
 const PLAYLIST_REFRESH_TIME = 1000 * 60;
 const ADVERT_TIMEOUT = 6000;
 const PLAYOUT_REFRESH_TIME = 1300 * 60;
