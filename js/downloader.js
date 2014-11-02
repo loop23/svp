@@ -55,7 +55,7 @@ Downloader.prototype.canDownload = function(item) {
     return false;
   }
   if (this.inProgress.indexOf(item.localFile) > -1) {
-    console.warn("[Downloader] Non lo scarico, lo sto gia' scaricando")
+    console.warn("[Downloader] Non lo scarico, lo sto gia' scaricando");
     return false;
   }
   if (this.queued.some(function(i) {
@@ -139,7 +139,7 @@ Downloader.prototype.downloadPlaylistItem = function(item, chunk) {
   console.debug("[Downloader] Richiesto dl di item: %s, chunk: %i", item.toString(), chunk);
   if (chunk == 0) {
     if (this.canDownload(item)) {
-      if (this.inProgress.length > 6) {
+      if (this.inProgress.length > PARALLEL_DOWNLOADS) {
 	this.queued.push(item);
 	console.info("[Downloader] Too many downloads, queing");
 	return;
