@@ -58,12 +58,16 @@ body {
 
 #video-titolo {
   width: 100%;
+  line-height: 2.3;
   position: absolute;
-  bottom: 1em;
-  color: #fff;
-  font-size: 5em;
+  bottom: 0em;
+  color: #000;
+  background-color: #fff;
+  opacity: 0.7;
+  font-size: 3em;
   z-index: 3;
   text-align: center;
+  font-family: "Arial";
 }
 
 #video-overlay {
@@ -75,6 +79,26 @@ body {
   top: 0;
   left: 0;
   z-index: 2;
+}
+
+#top-logo {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    z-index: 4;
+}
+#top-logo img {
+    height: 76px;
+}
+
+#bottom-logo {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 4;
+}
+#bottom-logo img {
+    height: 76px;
 }
 
 #editor-path {

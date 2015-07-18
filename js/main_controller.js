@@ -20,7 +20,10 @@ MainController = function(filesystem) {
   this.listDir(this.filesystem.root);
 
   // L'ordine delle cose da playare
-  this.playoutOrder = ['Video', 'Advert', 'Video', 'VideoAdvert'];
+  this.playoutOrder = ['Video', 'Video', 'Video',
+                       'Video', 'Video', 'Video',
+                       'Video', 'Video', 'Video',
+                       'StaticSpot'];
   this.playoutOrderIndex = 0;
   this.currentPlayoutItem = function() {
     return this.playoutOrder[this.playoutOrderIndex];
@@ -61,11 +64,12 @@ MainController = function(filesystem) {
   }.bind(this), PLAYLIST_REFRESH_TIME);
 
   // E Ogni x provo a ricaricare il playoutOrder
-  this.plOrderRefreshTask = setInterval(function() {
-    this.requestPlayoutOrderDownload();
-  }.bind(this), PLAYOUT_REFRESH_TIME);
+  // Non in questa versione
+  // this.plOrderRefreshTask = setInterval(function() {
+  //   this.requestPlayoutOrderDownload();
+  // }.bind(this), PLAYOUT_REFRESH_TIME);
 
-    // Done!
+  // Done!
   this.requestPlaylistDownload();
   console.info("[MainController] Initialized!");
 };
@@ -99,6 +103,9 @@ MainController.prototype.getNext = function() {
     this.loadVideoAdvert();
   case 'OverlayAdvert':
     break;
+  case 'StaticSpot':
+    this.loadStaticSpot();
+    break;
   default:
     console.warn("current playout item is not recognized: %o",
 		 this.currentPlayoutItem());
@@ -124,6 +131,15 @@ MainController.prototype.loadVideoAdvert = function() {
   }.bind(this);
   xhr.send();
   return true;
+};
+
+MainController.prototype.loadStaticSpot = function() {
+  console.debug("[MainController] - Requesting the static spot");
+  window.video.loadUrl(STATIC_SPOT_URL);
+  $('#video-overlay').hide();
+  $('#top-logo').hide();
+  $('#bottom-logo').hide();
+  return false;
 };
 
 // List (della root); Invocata allo startup

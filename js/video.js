@@ -42,13 +42,14 @@ Video.prototype.loadUrl = function(url) {
   $('#video-overlay').style.display = 'none';
 },
 
-// Displays title and clear it after a while
+// Displays title and (not) clear it after a while
 Video.prototype.showTitle = function() {
   if (this.title) {
     $('#video-titolo').innerHTML = this.title;
-    window.setTimeout(function() {
-      $('#video-titolo').innerHTML = '';
-    }, 4000);
+    $('#video-titolo').classList.remove('hide');
+    // window.setTimeout(function() {
+    //   $('#video-titolo').innerHTML = '';
+    // }, 4000);
   }
 };
 
@@ -61,7 +62,7 @@ Video.prototype.showTitle = function() {
     return false;
   }
   var v = this;
-  var overlay = 
+  var overlay =
   console.debug("[Video] loadNext, plItem tornato da mainController: %o, mostro ads", plItem);
   overlay.style.display = 'block';
   $('#video').style.display = 'none';

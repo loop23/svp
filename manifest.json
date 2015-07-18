@@ -1,6 +1,6 @@
 {
   "name": "LocalVideo",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "manifest_version": 2,
   "description": "Video Player with local filesystem - playlist version; with advertisement; With some advert caching, checks for playlist before downloading it; does refresh playout order from server; Does load video adverts; Only 3 parallel downloads",
   "icons": {
@@ -17,9 +17,11 @@
 		  "fullscreen",
 		  "http://madre-dam.atcloud.it/",
 		  "https://madre-dam.atcloud.it/",
+                  "http://criticglobus.indemo.it/",
 		  "http://54.247.57.12/",
 		  "http://madre-r3.indemo.it/",
 		  "https://dam-museomadre.s3.amazonaws.com/",
+		  "https://dam-criticglobus.amazonaws.com/",
 		  "http://s3-eu-west-1.amazonaws.com/"
 		 ]
 }
