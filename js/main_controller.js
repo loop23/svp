@@ -95,6 +95,7 @@ MainController.prototype.getNext = function() {
   switch (this.currentPlayoutItem()) {
   case 'Video': // playList.getNext non puo' tornare undefined, senno' si ferma tutto!
     window.video.openPlItem(this.playList.getNext());
+    this.showStuff();
     break;
   case 'Advert':
     loadAdvert();
@@ -133,12 +134,24 @@ MainController.prototype.loadVideoAdvert = function() {
   return true;
 };
 
+MainController.prototype.hideStuff = function() {
+  hide('#video-overlay');
+  hide('#video-titolo');
+  hide('#top-logo');
+  hide('#bottom-logo');
+};
+
+MainController.prototype.showStuff = function() {
+  show('#video-overlay');
+  show('#video-titolo');
+  show('#top-logo');
+  show('#bottom-logo');
+};
+
 MainController.prototype.loadStaticSpot = function() {
   console.debug("[MainController] - Requesting the static spot");
   window.video.loadUrl(STATIC_SPOT_URL);
-  $('#video-overlay').hide();
-  $('#top-logo').hide();
-  $('#bottom-logo').hide();
+  this.hideStuff();
   return false;
 };
 

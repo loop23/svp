@@ -32,7 +32,7 @@ function info(msg) {
   console.log('INFO: ', arguments);
   var e = document.getElementById('info');
   e.innerText = msg;
-  e.classList.remove('hide');
+  show(e);
   window.setTimeout(function() { e.innerHTML = ''; }, 5000);
 }
 
@@ -70,7 +70,7 @@ function error(msg) {
   }
   var e = $('#error');
   e.innerText = 'ERROR:' + message;
-  e.classList.remove('hide');
+  show(e);
   console.log('ERROR: ' + message);
   window.setTimeout(function() { e.innerHTML = ''; }, 5000);
 }
@@ -215,4 +215,3 @@ Array.prototype.difference = function(a2) {
 //     this.push(tmp);
 //   return tmp;
 // };
-

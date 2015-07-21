@@ -46,7 +46,7 @@ Video.prototype.loadUrl = function(url) {
 Video.prototype.showTitle = function() {
   if (this.title) {
     $('#video-titolo').innerHTML = this.title;
-    $('#video-titolo').classList.remove('hide');
+    show('#video-titolo');
     // window.setTimeout(function() {
     //   $('#video-titolo').innerHTML = '';
     // }, 4000);
